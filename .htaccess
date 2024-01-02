@@ -1,0 +1,6 @@
+Options -MultiViews -Indexes
+<IfModule mod_headers.c>
+    <FilesMatch "\.(ico|jpg|jpeg|png|gif|webp|js|css)$">
+        Header set Cache-Control "max-age=31536000, public, must-revalidate"
+    </FilesMatch>
+</IfModule>

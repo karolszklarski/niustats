@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WDN0Q9FRX8"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-WDN0Q9FRX8');
+    </script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Niu Stats</title>
+    <link href="favicon.ico" rel="icon" type="image/x-icon">
+</head>
+<body>
+<pre>
+sn,date,distance,battery
+<script>
+    const trips = JSON.parse(localStorage.getItem('trips'));
+    Object.keys(trips).forEach(function (sn) {
+        trips[sn].forEach(function (t) {
+            document.write(sn + ',' + t.d + ',' + t.m + ',' + t.b + '\n');
+        })
+    });
+</script>
+</pre>
+</body>
+</html>

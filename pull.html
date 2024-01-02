@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WDN0Q9FRX8"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-WDN0Q9FRX8');
+    </script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Niu Stats</title>
+    <link href="favicon.ico" rel="icon" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+</head>
+<body>
+
+<div class="container">
+    <div class="card mt-3 mb-3">
+        <h3 class="card-header">Niu Stats</h3>
+        <div class="card-body">
+            <h5 class="card-title">Get your battery capacity stats</h5>
+            <p class="card-text">
+                Enter your login and password from Niu mobile app.
+            </p>
+            Disclaimers:
+            <ol>
+                <li>
+                    Your credentials will not be stored anywhere.
+                    Your data - vehicle, trips etc. - will be stored only in your web browser.
+                </li>
+                <li>
+                    This website is not in any way affiliated with the Niu company.
+                    It's a result of reverse engineering Niu mobile app.
+                    It may give wrong results or not work at all.
+                </li>
+            </ol>
+            <div class="mb-3">
+                <label for="login" class="form-label">Phone or email</label>
+                <input name="login" type="text" class="form-control" id="login">
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input name="password" type="password" class="form-control" id="password">
+            </div>
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary" id="gatherButton">Gather data from Niu server
+                </button>
+            </div>
+            <div class="mb-3" id="logsDiv" style="display: none">
+                <label for="logs" class="form-label">Logs</label>
+                <textarea class="form-control" id="logs" rows="10"></textarea>
+            </div>
+        </div>
+        <div class="card-footer text-body-secondary">
+            <a class="text-muted" href="mailto:support@niustats.com">Contact me</a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="md5.min.js"></script>
+<script>
+    const logs = $('#logs');
+    let working = false;
+    let trips = {};
+
+    function getTrips(token, serialNumbers, page, retry) {
+        if (serialNumbers.length === 0) {
+            localStorage.setItem('trips', JSON.stringify(trips));
+            working = false;
+            log("Finished\n");
+            scrollToBottom();
+            window.location.href = ".";
+            return;
+        }
+        let sn = serialNumbers[0];
+        if (!trips.hasOwnProperty(sn)) {
+            trips[sn] = [];
+        }
+        log("Requesting " + sn + " page " + page + "... ");
+        $.ajax({
+            url: "track.php",
+            type: 'POST',
+            data: {page: page, token: token, sn: sn},
+            dataType: 'json'
+        }).done(function (data) {
+            if (data.status === 0) {
+                if (data.data.items.length > 0) {
+                    log("ok\n");
+                    data.data.items.forEach(function (item) {
+                        let trip = {id: item.trackId, d: item.date, m: item.distance, b: item.power_consumption};
+                        trips[sn].push(trip);
+                    });
+                    getTrips(token, serialNumbers, page + 1, 0);
+                } else {
+                    if (retry < 3) {
+                        log("empty, retry\n");
+                        getTrips(token, serialNumbers, page, retry + 1);
+                    } else {
+                        log("empty, ok\n");
+                        trips[sn] = trips[sn].filter(duplicates).sort((a, b) => a.d - b.d);
+                        trips[sn].forEach(function (item) {
+                            delete item.id;
+                        });
+                        serialNumbers.shift();
+                        getTrips(token, serialNumbers, 1, 0);
+                    }
+                }
+            } else {
+                log("error: " + data.desc + "\n");
+                scrollToBottom();
+                working = false;
+            }
+        }).fail(function (jqxhr, status, errorThrown) {
+            log("error\n");
+            log(status);
+            log(errorThrown);
+            scrollToBottom();
+            working = false;
+        });
+    }
+
+    function getVehicles(token) {
+        log("Requesting vehicles... ");
+        $.ajax({
+            url: "https://app-api-fk.niu.com/v5/scooter/list",
+            type: 'GET',
+            contentType: 'application/json',
+            headers: {'token': token},
+            dataType: 'json',
+            crossDomain: true
+        }).done(function (data) {
+            if (data.status === 0) {
+                let serialNumbers = [];
+                let vehicles = {};
+                data.data.items.forEach(function (item) {
+                    serialNumbers.push(item.sn_id);
+                    vehicles[item.sn_id] = item;
+                });
+                log(serialNumbers.join() + "\n");
+                localStorage.setItem('vehicles', JSON.stringify(vehicles));
+                trips = {};
+                getTrips(token, serialNumbers, 1, 0);
+            } else {
+                log("error: " + data.desc + "\n");
+                scrollToBottom();
+                working = false;
+            }
+        }).fail(function (jqxhr, status, errorThrown) {
+            log("error\n");
+            log(status);
+            log(errorThrown);
+            scrollToBottom();
+            working = false;
+        });
+    }
+
+    function getToken(login, password) {
+        log("Requesting token... ");
+        $.ajax({
+            url: "https://account-fk.niu.com/v3/api/oauth2/token",
+            type: 'POST',
+            contentType: 'application/json',
+            data: '{"account":"' + login + '","app_id":"niu_fksss2ws","grant_type":"password","password":"' + password + '","scope":"base"}',
+            dataType: 'json',
+            crossDomain: true
+        }).done(function (data) {
+            if (data.status === 0) {
+                log("ok\n");
+                let token = data.data.token.access_token;
+                getVehicles(token);
+            } else {
+                log("error: " + data.desc + "\n");
+                scrollToBottom();
+                working = false;
+            }
+        }).fail(function (jqxhr, status, errorThrown) {
+            log("error\n");
+            log(status);
+            log(errorThrown);
+            scrollToBottom();
+            working = false;
+        });
+    }
+
+    $("#gatherButton").click(function () {
+        if (working) return;
+        working = true;
+        $("#logsDiv").show();
+        scrollToBottom();
+        let login = $("#login").val();
+        let password = md5($("#password").val());
+        getToken(login, password);
+    });
+
+    function log(message) {
+        logs.append(message);
+        logs.scrollTop(logs[0].scrollHeight);
+    }
+
+    function duplicates(trip, index, trips) {
+        return trips.findIndex((t, i) => i !== index && t.id === trip.id) < 0;
+    }
+
+    function scrollToBottom() {
+        const scrollingElement = (document.scrollingElement || document.body);
+        scrollingElement.scrollTop = scrollingElement.scrollHeight;
+    }
+</script>
+</body>
+</html>
