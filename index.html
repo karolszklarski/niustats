@@ -43,8 +43,8 @@
     const monthRanges20 = {};
     const monthRanges10 = {};
     serialNumbers.forEach(function (sn) {
-        const maxRatioTrip = Array.from(trips[sn]).sort((a, b) => a.b / a.m - b.b / b.m)[Math.ceil((trips[sn].length-1) * 0.98)];
-        const maxRatio = maxRatioTrip.b / maxRatioTrip.m;
+        const maxRatioTrip = Array.from(trips[sn]).sort((a, b) => a.b / a.m - b.b / b.m)[Math.ceil((trips[sn].length) * 0.98)-1];
+        const maxRatio = maxRatioTrip != null ? maxRatioTrip.b / maxRatioTrip.m : null;
         months[sn] = Object.groupBy(
             trips[sn].filter((t) => t.b > 0 && t.b / t.m <= maxRatio),
             ({d}) => Math.floor(d / 100)
