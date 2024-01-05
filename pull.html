@@ -75,13 +75,13 @@
     function getTrips(token, serialNumbers, page, retry) {
         if (serialNumbers.length === 0) {
             localStorage.setItem('trips', JSON.stringify(trips));
-            working = false;
             log("Finished\n");
             scrollToBottom();
             window.location.href = ".";
+            working = false;
             return;
         }
-        let sn = serialNumbers[0];
+        const sn = serialNumbers[0];
         if (!trips.hasOwnProperty(sn)) {
             trips[sn] = [];
         }
@@ -96,7 +96,7 @@
                 if (data.data.items.length > 0) {
                     log("ok\n");
                     data.data.items.forEach(function (item) {
-                        let trip = {id: item.trackId, d: item.date, m: item.distance, b: item.power_consumption};
+                        const trip = {id: item.trackId, d: item.date, m: item.distance, b: item.power_consumption};
                         trips[sn].push(trip);
                     });
                     getTrips(token, serialNumbers, page + 1, 0);
@@ -139,8 +139,8 @@
             crossDomain: true
         }).done(function (data) {
             if (data.status === 0) {
-                let serialNumbers = [];
-                let vehicles = {};
+                const serialNumbers = [];
+                const vehicles = {};
                 data.data.items.forEach(function (item) {
                     serialNumbers.push(item.sn_id);
                     vehicles[item.sn_id] = item;
@@ -175,7 +175,7 @@
         }).done(function (data) {
             if (data.status === 0) {
                 log("ok\n");
-                let token = data.data.token.access_token;
+                const token = data.data.token.access_token;
                 getVehicles(token);
             } else {
                 log("error: " + data.desc + "\n");
@@ -196,8 +196,8 @@
         working = true;
         $("#logsDiv").show();
         scrollToBottom();
-        let login = $("#login").val();
-        let password = md5($("#password").val());
+        const login = $("#login").val();
+        const password = md5($("#password").val());
         getToken(login, password);
     });
 
