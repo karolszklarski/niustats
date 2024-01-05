@@ -4,3 +4,8 @@ Options -MultiViews -Indexes
         Header set Cache-Control "max-age=31536000, public, must-revalidate"
     </FilesMatch>
 </IfModule>
+
+RewriteEngine on
+RewriteCond %{HTTPS} !on [OR]
+RewriteCond %{HTTP_HOST} ^www\..+$ [NC]
+RewriteRule ^(.*)$ https://niustats.com/$1 [R=301,L]
