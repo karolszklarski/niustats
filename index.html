@@ -46,11 +46,9 @@
     serialNumbers.forEach(function (sn) {
         const maxRatioTrip = Array.from(trips[sn]).sort((a, b) => a.b / a.m - b.b / b.m)[Math.ceil((trips[sn].length) * 0.98)-1];
         const maxRatio = maxRatioTrip != null ? maxRatioTrip.b / maxRatioTrip.m : null;
+        months[sn] = [];
         trips[sn].filter((t) => t.b > 0 && t.b / t.m <= maxRatio).forEach(function (t) {
             const key = Math.floor(t.d / 100);
-            if (!months.hasOwnProperty(sn)) {
-                months[sn] = [];
-            }
             if (!months[sn].hasOwnProperty(key)) {
                 months[sn][key] = [];
             }
