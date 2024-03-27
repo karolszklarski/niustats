@@ -5,7 +5,7 @@ $sn = $_POST['sn'];
 $curl = curl_init();
 curl_setopt($curl, CURLOPT_URL, "https://app-api-fk.niu.com/v5/track/list/v3");
 curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($curl, CURLOPT_HTTPHEADER, array("content-type: application/json", "token: $token", 'user-agent: manager/5.2.0 (android);clientIdentifier=Overseas'));
+curl_setopt($curl, CURLOPT_HTTPHEADER, array("content-type: application/json", "token: $token", 'user-agent: manager/5.2.0 (android; SM-A202F 11);lang=pl-PL;clientIdentifier=Overseas;timezone=Europe/Warsaw;model=samsung_SM-A202F;deviceName=SM-A202F;ostype=android'));
 curl_setopt($curl, CURLOPT_POST, true);
 curl_setopt($curl, CURLOPT_POSTFIELDS, '{"pagesize":100,"index":"'.$page.'","sn":"'.$sn.'"}');
 $output = curl_exec($curl);
