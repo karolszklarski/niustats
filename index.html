@@ -42,6 +42,7 @@
     const months = {};
     const monthDistances = {};
     const monthBatteries = {};
+    const monthRanges30 = {};
     const monthRanges20 = {};
     const monthRanges10 = {};
     serialNumbers.forEach(function (sn) {
@@ -57,13 +58,15 @@
         });
         monthDistances[sn] = {};
         monthBatteries[sn] = {};
+        monthRanges30[sn] = {};
         monthRanges20[sn] = {};
         monthRanges10[sn] = {};
         Object.keys(months[sn]).forEach(function (month) {
             monthDistances[sn][month] = months[sn][month].reduce((acc, curr) => acc + curr.m, 0) * distanceUnit / 1000;
             monthBatteries[sn][month] = months[sn][month].reduce((acc, curr) => acc + curr.b, 0) / monthDistances[sn][month];
-            monthRanges20[sn][month] = 80 / monthBatteries[sn][month];
-            monthRanges10[sn][month] = 90 / monthBatteries[sn][month] - monthRanges20[sn][month];
+            monthRanges30[sn][month] = 70 / monthBatteries[sn][month];
+            monthRanges20[sn][month] = 80 / monthBatteries[sn][month] - monthRanges30[sn][month];
+            monthRanges10[sn][month] = 90 / monthBatteries[sn][month] - monthRanges30[sn][month] - monthRanges20[sn][month];
         });
     });
 </script>
@@ -137,9 +140,14 @@
                 labels: Object.keys(months[sn]),
                 datasets: [
                     {
-                        label: 'Range from 100% to 20%',
-                        data: Object.values(monthRanges20[sn]),
+                        label: 'Range from 100% to 30%',
+                        data: Object.values(monthRanges30[sn]),
                         backgroundColor: '#aaffaa',
+                    },
+                    {
+                        label: 'Range from 30% to 20%',
+                        data: Object.values(monthRanges20[sn]),
+                        backgroundColor: '#ffffaa',
                     },
                     {
                         label: 'Range from 20% to 10%',
@@ -175,10 +183,18 @@
                 labels: Object.keys(months[sn]),
                 datasets: [
                     {
-                        label: 'Range from 100% to 20%',
-                        data: Object.values(monthRanges20[sn]),
+                        label: 'Range from 100% to 30%',
+                        data: Object.values(monthRanges30[sn]),
                         backgroundColor: '#aaffaa',
                         borderColor: '#77ff77',
+                        type: 'line',
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: 'Range from 30% to 20%',
+                        data: Object.values(monthRanges20[sn]),
+                        backgroundColor: '#ffffaa',
+                        borderColor: '#ffff77',
                         type: 'line',
                         yAxisID: 'y',
                     },
