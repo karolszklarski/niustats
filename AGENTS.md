@@ -13,7 +13,7 @@ This repository is public and linked from the site.
   - `js/niu.js`: the Niu API client. `js/stats.js`: the monthly statistics. `js/storage.js`: the data in `localStorage`. `js/example.js`: the example data.
   - `vendor/`: Chart.js and blueimp-md5 (which hashes the password the way the Niu app does), with their licences. They are copies of the npm packages pinned in `package.json`, made by `npm run vendor`, never edited by hand. A unit test checks that they match the installed packages.
   - Text that search engines should read stays in the HTML. Scripts add only the charts and the data.
-  - `track.php`: forwards trip list requests to Niu with the mobile app's `User-Agent`, which a web page cannot set. It accepts only a page number, a serial number and a token of the expected characters, because they go into the request to Niu.
+  - `track.php`: forwards trip list requests to Niu with the mobile app's `User-Agent`, which a web page cannot set. It cannot be replaced by a direct request from the browser: with a valid token, the `v3` and `v2` trip lists answered such a request with HTTP 500 (checked in November 2026), although Niu allows any origin. It accepts only a page number, a serial number and a token of the expected characters, because they go into the request to Niu, and sends back only the trip fields the site uses.
   - `.htaccess`: HTTPS and `www` redirects on the host (Apache), and `no-cache` for every file, because file names carry no version.
 - `scripts/serve.js`: static server for local preview and for the tests. It does not run PHP.
 - `tests/unit/`: `node:test` tests of the modules in `public/js/`.

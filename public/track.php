@@ -1,6 +1,7 @@
 <?php
 // Forwards a request for one page of a scooter's trip list to the Niu API, with the User-Agent of the
-// Niu mobile app, which browsers do not let a web page set. Nothing is stored.
+// Niu mobile app. Browsers do not let a web page set that header, and the same request sent straight
+// from a browser gets HTTP 500. Nothing is stored, and only the trip fields the site uses go back.
 declare(strict_types=1);
 
 const NIU_API = 'https://app-api-fk.niu.com';
@@ -8,6 +9,8 @@ const USER_AGENT = 'manager/5.2.0 (android; SM-A202F 11);lang=pl-PL;clientIdenti
     . 'timezone=Europe/Warsaw;model=samsung_SM-A202F;deviceName=SM-A202F;ostype=android';
 const CONNECT_TIMEOUT = 5; // seconds
 const TIMEOUT = 15; // seconds, for the whole request
+const TRIP_FIELDS = ['trackId', 'date', 'distance', 'power_consumption'];
+const UNREADABLE = 'Niu sent an unreadable answer';
 
 header('Content-Type: application/json');
 
@@ -62,4 +65,27 @@ $code = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
 if ($code !== 200) {
     fail(502, "Niu answered with HTTP $code");
 }
-echo $output;
+
+// A trip id too long for a PHP integer stays a string, so it keeps all its digits.
+$answer = json_decode($output, true, 512, JSON_BIGINT_AS_STRING);
+if (!is_array($answer) || !is_int($answer['status'] ?? null)) {
+    fail(502, UNREADABLE);
+}
+if ($answer['status'] !== 0) {
+    // A refusal from Niu, such as an expired token, which the download page shows to the user.
+    echo json_encode(['data' => [], 'status' => $answer['status'], 'desc' => $answer['desc'] ?? 'Niu refused the request']);
+    exit;
+}
+$items = $answer['data']['items'] ?? null;
+if (!is_array($items)) {
+    fail(502, UNREADABLE);
+}
+
+$trips = [];
+foreach ($items as $item) {
+    if (!is_array($item)) {
+        fail(502, UNREADABLE);
+    }
+    $trips[] = array_intersect_key($item, array_flip(TRIP_FIELDS));
+}
+echo json_encode(['status' => 0, 'data' => ['items' => $trips]]);

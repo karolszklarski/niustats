@@ -69,7 +69,8 @@ test('forwards the request to the Niu trip list as the mobile app', async () => 
   const { status, json } = await trackPhp(valid);
   assert.equal(status, 200);
   assert.equal(json.status, 0);
-  const { body, ...request } = json.data.request;
+  // The stub puts the request it got into the id of the trip.
+  const { body, ...request } = JSON.parse(json.data.items[0].trackId);
   assert.deepEqual(request, {
     method: 'POST',
     path: '/v5/track/list/v3',
@@ -78,6 +79,39 @@ test('forwards the request to the Niu trip list as the mobile app', async () => 
     userAgent: USER_AGENT,
   });
   assert.deepEqual(JSON.parse(body), { pagesize: 100, index: '2', sn: 'SN1' });
+});
+
+test('passes on only the trip fields the site uses', async () => {
+  const { json } = await trackPhp(valid);
+  const { trackId } = json.data.items[0];
+  assert.deepEqual(json, {
+    status: 0,
+    data: { items: [{ trackId, date: 20240105, distance: 6461, power_consumption: 13 }] },
+  });
+});
+
+test('passes on a trip without an id', async () => {
+  const { json } = await trackPhp({ ...valid, sn: 'NOID' });
+  assert.deepEqual(json.data.items, [{ date: 20240105, distance: 6461, power_consumption: 13 }]);
+});
+
+test('passes on an empty page as an empty list', async () => {
+  assert.deepEqual(await trackPhp({ ...valid, sn: 'EMPTY' }), { status: 200, json: { status: 0, data: { items: [] } } });
+});
+
+test('passes on only the code and message of a refusal from Niu', async () => {
+  assert.deepEqual(await trackPhp({ ...valid, sn: 'REFUSED' }), {
+    status: 200,
+    json: { data: [], status: 1131, desc: 'Incorrect Login Details' },
+  });
+});
+
+test('reports an answer from Niu that cannot be read', async () => {
+  assert.deepEqual(await trackPhp({ ...valid, sn: 'NOTJSON' }), { status: 502, json: error('Niu sent an unreadable answer') });
+});
+
+test('reports an answer from Niu without a trip list', async () => {
+  assert.deepEqual(await trackPhp({ ...valid, sn: 'NOLIST' }), { status: 502, json: error('Niu sent an unreadable answer') });
 });
 
 test('rejects a page that is not a positive number', async () => {
