@@ -14,10 +14,10 @@ This repository is public and linked from the site.
   - `vendor/`: Chart.js and blueimp-md5 (which hashes the password the way the Niu app does), with their licences. They are copies of the npm packages pinned in `package.json`, made by `npm run vendor`, never edited by hand. A unit test checks that they match the installed packages.
   - Text that search engines should read stays in the HTML. Scripts add only the charts and the data.
   - `track.php`: forwards trip list requests to Niu with the mobile app's `User-Agent`, which a web page cannot set. It accepts only a page number, a serial number and a token of the expected characters, because they go into the request to Niu.
-  - `.htaccess`: HTTPS and `www` redirects and cache headers on the host (Apache).
+  - `.htaccess`: HTTPS and `www` redirects on the host (Apache), and `no-cache` for every file, because file names carry no version.
 - `scripts/serve.js`: static server for local preview and for the tests. It does not run PHP.
 - `tests/unit/`: `node:test` tests of the modules in `public/js/`.
-- `tests/php/`: `node:test` tests of `track.php` on PHP in Docker, with `niu-stub.php` standing in for the Niu API.
+- `tests/php/`: `node:test` tests in Docker: `track.php` on PHP, with `niu-stub.php` standing in for the Niu API, and `.htaccess` on Apache.
 - `tests/e2e/`: Playwright browser tests. `fixtures.js` holds the shared setup.
 
 ## Commands
@@ -32,7 +32,7 @@ npm run serve                     # http://127.0.0.1:4326/
 ## Tests
 
 - **No test contacts a real server.** The Niu API is stubbed per test, CDN files come from the npm packages pinned in `package.json`, and any other external request (Google Analytics included) is aborted. A test must never send real credentials or analytics hits.
-- **`track.php` runs on the PHP version of the host** (`IMAGE` in `tests/php/track.test.js`), with short tags off and every error, warning and deprecation printed, so any of them breaks the JSON answer and fails the test.
+- **`track.php` runs on the PHP version of the host** (`PHP_VERSION` in `tests/php/php-version.js`), with short tags off and every error, warning and deprecation printed, so any of them breaks the JSON answer and fails the test. Before the host moves to a new PHP version, change `PHP_VERSION` and run `npm run test:php`.
 - **Every test fails on an uncaught error in the page.**
 - **`tests/e2e/__snapshots__/`** holds the monthly statistics computed from the example data. Update a snapshot (`npx playwright test --update-snapshots`) only for an intended change in the numbers, and explain the change in the commit message.
 

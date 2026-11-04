@@ -6,8 +6,8 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
+import { PHP_VERSION } from './php-version.js';
 
-const IMAGE = 'php:8.5.11-cli';
 const CONTAINER = 'niustats-php-test';
 const PORT = 8093;
 const TRACK_URL = `http://127.0.0.1:${PORT}/track.php`;
@@ -29,7 +29,7 @@ before(async () => {
     '--volume', `${repoPath('tests/php')}:/stub:ro`,
     '--env', 'NIU_API_URL=http://127.0.0.1:9000',
     '--env', 'PHP_CLI_SERVER_WORKERS=4',
-    IMAGE, 'sh', '-c',
+    `php:${PHP_VERSION}-cli`, 'sh', '-c',
     'php -S 127.0.0.1:9000 /stub/niu-stub.php & ' +
       'exec php -d short_open_tag=0 -d display_errors=1 -d error_reporting=-1 -S 0.0.0.0:8000 -t /app',
   );

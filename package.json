@@ -14,7 +14,7 @@
     "vendor": "node scripts/vendor.js",
     "test": "npm run test:unit && npm run test:php && npm run test:e2e",
     "test:unit": "node --test \"tests/unit/*.test.js\"",
-    "test:php": "node --test \"tests/php/*.test.js\"",
+    "test:php": "node --test --test-concurrency=1 \"tests/php/*.test.js\"",
     "test:e2e": "playwright test"
   },
   "dependencies": {

@@ -32,18 +32,18 @@ The same statistics are available in miles.
 
 The site in `public/` is plain HTML, JavaScript modules and PHP, with no build step: the files are served exactly as they are in the repository. The page scripts and the modules they share are in `public/js/`. The libraries the pages use are served from `public/vendor/`, copied from the npm packages pinned in `package.json` with `npm run vendor`.
 
-Requirements: Node.js 24, and Docker for the `track.php` tests.
+Requirements: Node.js 24, and Docker for the tests of `track.php` and `.htaccess`.
 
 ```sh
 npm ci
 npx playwright install chromium   # once, the browser for the tests
-npm test                          # unit tests, track.php tests, then browser tests
+npm test                          # unit tests, PHP and Apache tests, then browser tests
 npm run serve                     # local preview at http://127.0.0.1:4326/
 ```
 
 `npm run serve` serves `public/` as static files. `track.php` needs PHP, so downloading data from Niu works only on a PHP host.
 
-The tests never contact real servers. The Niu API is stubbed in each test, and the files the pages load from CDNs come from the same versions installed from npm. `track.php` is tested on PHP 8.5 in Docker, the version the site runs on, against a stub of the Niu API in the same container.
+The tests never contact real servers. The Niu API is stubbed in each test, and the files the pages load from CDNs come from the same versions installed from npm. `track.php` is tested on PHP 8.5 in Docker, the version the site runs on, against a stub of the Niu API in the same container, and `.htaccess` on Apache with the same PHP version.
 
 ## License
 

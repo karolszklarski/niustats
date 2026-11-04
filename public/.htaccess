@@ -1,8 +1,11 @@
 Options -MultiViews -Indexes
+
 <IfModule mod_headers.c>
-    <FilesMatch "\.(ico|jpg|jpeg|png|gif|webp|js|css)$">
-        Header set Cache-Control "max-age=31536000, public, must-revalidate"
-    </FilesMatch>
+    # Browsers check every file each time, and an unchanged file comes back as a short 304 answer.
+    # File names carry no version, so a longer cache would keep old code in returning visitors' browsers.
+    Header set Cache-Control "no-cache"
+    # The host adds its own Expires header, which contradicts Cache-Control.
+    Header unset Expires
 </IfModule>
 
 RewriteEngine on
