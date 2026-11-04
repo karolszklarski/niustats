@@ -13,10 +13,11 @@ This repository is public and linked from the site.
   - `js/niu.js`: the Niu API client. `js/stats.js`: the monthly statistics. `js/storage.js`: the data in `localStorage`. `js/example.js`: the example data.
   - `md5.min.js`: blueimp-md5, which hashes the password the way the Niu app does.
   - Text that search engines should read stays in the HTML. Scripts add only the charts and the data.
-  - `track.php`: forwards trip list requests to Niu with the mobile app's `User-Agent`, which a web page cannot set.
+  - `track.php`: forwards trip list requests to Niu with the mobile app's `User-Agent`, which a web page cannot set. It accepts only a page number, a serial number and a token of the expected characters, because they go into the request to Niu.
   - `.htaccess`: HTTPS and `www` redirects and cache headers on the host (Apache).
 - `scripts/serve.js`: static server for local preview and for the tests. It does not run PHP.
 - `tests/unit/`: `node:test` tests of the modules in `public/js/`.
+- `tests/php/`: `node:test` tests of `track.php` on PHP in Docker, with `niu-stub.php` standing in for the Niu API.
 - `tests/e2e/`: Playwright browser tests. `fixtures.js` holds the shared setup.
 
 ## Commands
@@ -24,13 +25,14 @@ This repository is public and linked from the site.
 ```sh
 npm ci
 npx playwright install chromium   # once
-npm test                          # npm run test:unit, then npm run test:e2e
+npm test                          # test:unit, test:php (needs Docker), then test:e2e
 npm run serve                     # http://127.0.0.1:4326/
 ```
 
 ## Tests
 
 - **No test contacts a real server.** The Niu API is stubbed per test, CDN files come from the npm packages pinned in `package.json`, and any other external request (Google Analytics included) is aborted. A test must never send real credentials or analytics hits.
+- **`track.php` runs on the PHP version of the host** (`IMAGE` in `tests/php/track.test.js`), with short tags off and every error, warning and deprecation printed, so any of them breaks the JSON answer and fails the test.
 - **Every test fails on an uncaught error in the page.**
 - **`tests/e2e/__snapshots__/`** holds the monthly statistics computed from the example data. Update a snapshot (`npx playwright test --update-snapshots`) only for an intended change in the numbers, and explain the change in the commit message.
 

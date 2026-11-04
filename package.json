@@ -11,8 +11,9 @@
   },
   "scripts": {
     "serve": "node scripts/serve.js",
-    "test": "npm run test:unit && npm run test:e2e",
+    "test": "npm run test:unit && npm run test:php && npm run test:e2e",
     "test:unit": "node --test \"tests/unit/*.test.js\"",
+    "test:php": "node --test \"tests/php/*.test.js\"",
     "test:e2e": "playwright test"
   },
   "devDependencies": {
