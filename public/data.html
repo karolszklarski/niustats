@@ -15,12 +15,17 @@
     <meta name="description" content="Get your battery capacity stats. Enter your login and password from Niu mobile app to get all your riding data. You can then see charts or download and process it by yourself.">
     <link href="favicon.ico" rel="icon" type="image/x-icon">
     <meta name="robots" content="noindex">
+    <script src="example.js"></script>
 </head>
 <body>
 <pre>
 sn,date,distance,battery
 <script>
-    const trips = JSON.parse(localStorage.getItem('trips'));
+    // The same trips as on the home page: the stored ones when scooters and trips are both stored,
+    // otherwise the example data.
+    const storedTrips = localStorage.getItem('trips');
+    const useStoredData = localStorage.getItem('vehicles') !== null && storedTrips !== null;
+    const trips = JSON.parse(useStoredData ? storedTrips : exampleTrips);
     Object.keys(trips).forEach(function (sn) {
         trips[sn].forEach(function (t) {
             document.write(sn + ',' + t.d + ',' + t.m + ',' + t.b + '\n');
