@@ -105,6 +105,26 @@ test('downloads scooters and trips into the browser', async ({ page }) => {
   await expect(page.locator('.card-header', { hasText: 'Red - MQi+ - SN2' })).toHaveCount(4);
 });
 
+test('sends the login as JSON, without surrounding spaces', async ({ page }) => {
+  const requests = await stubNiu(page);
+
+  await signIn(page, ' rider"x\\y@example.com ', 'secret');
+  await page.waitForURL((url) => url.pathname === '/');
+
+  expect(requests.login.map(({ account }) => account)).toEqual(['rider"x\\y@example.com']);
+});
+
+test('keeps browsers from correcting or capitalising the login', async ({ page }) => {
+  await page.goto('/pull.html');
+
+  const login = page.getByLabel('Phone or email');
+  await expect(login).toHaveAttribute('autocomplete', 'username');
+  await expect(login).toHaveAttribute('autocapitalize', 'none');
+  await expect(login).toHaveAttribute('autocorrect', 'off');
+  await expect(login).toHaveAttribute('spellcheck', 'false');
+  await expect(page.getByLabel('Password')).toHaveAttribute('autocomplete', 'current-password');
+});
+
 test('shows the error from Niu when signing in fails', async ({ page }) => {
   const requests = await stubNiu(page, { login: { status: 1, desc: 'Wrong password' } });
 

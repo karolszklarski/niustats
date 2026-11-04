@@ -41,11 +41,13 @@
             </ol>
             <div class="mb-3">
                 <label for="login" class="form-label">Phone or email</label>
-                <input name="login" type="text" class="form-control" id="login">
+                <input name="login" type="text" class="form-control" id="login" autocomplete="username"
+                       autocapitalize="none" autocorrect="off" spellcheck="false">
             </div>
             <div class="mb-3">
                 <label for="password" class="form-label">Password</label>
-                <input name="password" type="password" class="form-control" id="password">
+                <input name="password" type="password" class="form-control" id="password"
+                       autocomplete="current-password">
             </div>
             <div class="mb-3">
                 <button type="submit" class="btn btn-primary" id="gatherButton">Gather data from Niu server
@@ -169,7 +171,13 @@
             url: "https://account-fk.niu.com/v3/api/oauth2/token",
             type: 'POST',
             contentType: 'application/json',
-            data: '{"account":"' + login + '","app_id":"niu_fksss2ws","grant_type":"password","password":"' + password + '","scope":"base"}',
+            data: JSON.stringify({
+                account: login,
+                app_id: 'niu_fksss2ws',
+                grant_type: 'password',
+                password: password,
+                scope: 'base'
+            }),
             dataType: 'json',
             crossDomain: true
         }).done(function (data) {
@@ -196,7 +204,7 @@
         working = true;
         $("#logsDiv").show();
         scrollToBottom();
-        const login = $("#login").val();
+        const login = $("#login").val().trim();
         const password = md5($("#password").val());
         getToken(login, password);
     });
