@@ -177,6 +177,32 @@ test('keeps the data stored earlier when the download fails', async ({ page }) =
   ).toEqual(earlier);
 });
 
+test('tries again a request that fails on the way', async ({ page }) => {
+  const requests = await stubNiu(page, {
+    trips: {
+      SN1: [[track('a', 20240105, 10000, 20)], [track('b', 20240203, 8000, 20)]],
+      SN2: [[track('c', 20240301, 20000, 25)]],
+    },
+    failures: {
+      'SN1 2': [(route) => route.fulfill({ status: 502, json: { data: [], status: -1, desc: 'Niu answered with HTTP 500' } })],
+      'SN2 1': [(route) => route.abort('failed')],
+    },
+  });
+
+  await signIn(page, 'rider@example.com', 'secret');
+  await page.waitForURL((url) => url.pathname === '/');
+
+  expect(await storedTrips(page)).toEqual({
+    SN1: [
+      { d: 20240105, m: 10000, b: 20 },
+      { d: 20240203, m: 8000, b: 20 },
+    ],
+    SN2: [{ d: 20240301, m: 20000, b: 25 }],
+  });
+  const retried = requests.tracks.map(({ sn, page }) => `${sn} ${page}`).filter((key) => key === 'SN1 2' || key === 'SN2 1');
+  expect(retried).toEqual(['SN1 2', 'SN1 2', 'SN2 1', 'SN2 1']);
+});
+
 test('sends the login as JSON, without surrounding spaces', async ({ page }) => {
   const requests = await stubNiu(page);
 
