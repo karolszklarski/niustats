@@ -30,7 +30,7 @@ The same statistics are available in miles.
 
 ## Development
 
-The site in `public/` is plain HTML, JavaScript modules and PHP, with no build step: the files are served exactly as they are in the repository. The page scripts and the modules they share are in `public/js/`.
+The site in `public/` is plain HTML, JavaScript modules and PHP, with no build step: the files are served exactly as they are in the repository. The page scripts and the modules they share are in `public/js/`. The libraries the pages use are served from `public/vendor/`, copied from the npm packages pinned in `package.json` with `npm run vendor`.
 
 Requirements: Node.js 24, and Docker for the `track.php` tests.
 

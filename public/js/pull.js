@@ -1,5 +1,5 @@
 // Download page: signs in to Niu, downloads the scooters with their trips and stores them in the browser.
-// md5() comes from md5.min.js, loaded as a classic script before this module.
+// md5() comes from vendor/md5.min.js, loaded as a classic script before this module.
 import { downloadData, NiuError } from './niu.js';
 import { saveData } from './storage.js';
 

@@ -127,6 +127,17 @@ test('charts stored scooters instead of the example', async ({ page }) => {
   expect(sn2.range.datasets.map(({ data }) => data)).toEqual([[56], [8], [8]]);
 });
 
+test('loads Chart.js from this site, not from a CDN', async ({ page, baseURL }) => {
+  const scripts = [];
+  page.on('request', (request) => {
+    if (request.resourceType() === 'script') scripts.push(request.url());
+  });
+  await page.goto('/');
+
+  expect(scripts.filter((url) => /chart/i.test(url))).toEqual([`${baseURL}/vendor/chart.umd.min.js`]);
+  expect(await readCharts(page, EXAMPLE_SN)).toBeTruthy();
+});
+
 test('shows scooter names as text, not as HTML', async ({ page }) => {
   await storeItems(page, {
     vehicles: { SN1: { sn_id: 'SN1', scooter_name: '<img src=x onerror="window.injected=1">', sku_name: 'R&D' } },

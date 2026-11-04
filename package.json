@@ -11,14 +11,18 @@
   },
   "scripts": {
     "serve": "node scripts/serve.js",
+    "vendor": "node scripts/vendor.js",
     "test": "npm run test:unit && npm run test:php && npm run test:e2e",
     "test:unit": "node --test \"tests/unit/*.test.js\"",
     "test:php": "node --test \"tests/php/*.test.js\"",
     "test:e2e": "playwright test"
   },
+  "dependencies": {
+    "blueimp-md5": "2.19.0",
+    "chart.js": "4.5.1"
+  },
   "devDependencies": {
     "@playwright/test": "1.64.1",
-    "bootstrap": "5.3.2",
-    "chart.js": "4.5.1"
+    "bootstrap": "5.3.2"
   }
 }

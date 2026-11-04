@@ -15,10 +15,6 @@ const cdnFiles = new Map([
     'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js',
     { path: nodeModule('bootstrap/dist/js/bootstrap.bundle.min.js'), contentType: 'text/javascript' },
   ],
-  [
-    'https://cdn.jsdelivr.net/npm/chart.js',
-    { path: nodeModule('chart.js/dist/chart.umd.min.js'), contentType: 'text/javascript' },
-  ],
 ]);
 
 export const test = base.extend({
