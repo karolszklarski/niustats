@@ -79,12 +79,12 @@ test('reads trip pages through track.php until a page is empty four times', asyn
   assert.deepEqual(data.trips, { SN1: [{ d: 20240105, m: 10000, b: 20 }, { d: 20240120, m: 5000, b: 10 }] });
   assert.equal(
     log,
-    'Requesting token... ok\n' +
-      'Requesting vehicles... SN1\n' +
-      'Requesting SN1 page 1... ok\n' +
-      'Requesting SN1 page 2... ok\n' +
-      'Requesting SN1 page 3... empty, retry\n'.repeat(3) +
-      'Requesting SN1 page 3... empty, ok\n',
+    'Signing in... ok\n' +
+      'Getting your scooters... SN1\n' +
+      'Getting trips for SN1, page 1... ok\n' +
+      'Getting trips for SN1, page 2... ok\n' +
+      'Getting trips for SN1, page 3... empty, trying again\n'.repeat(3) +
+      'Getting trips for SN1, page 3... no more trips\n',
   );
   assert.deepEqual(waits, []);
 });
@@ -110,7 +110,7 @@ test('tries again after a server error, waiting 1 s and then 2 s', async () => {
   assert.deepEqual(waits, [1000, 2000]);
   assert.match(
     log,
-    /Requesting SN1 page 1\.\.\. Niu answered with HTTP 500, retrying in 1 s\.\.\. Niu answered with HTTP 500, retrying in 2 s\.\.\. ok\n/,
+    /Getting trips for SN1, page 1\.\.\. Niu answered with HTTP 500, retrying in 1 s\.\.\. Niu answered with HTTP 500, retrying in 2 s\.\.\. ok\n/,
   );
 });
 
@@ -124,7 +124,7 @@ test('tries again after a failed connection', async () => {
   const { log, waits } = await download(niu);
 
   assert.deepEqual(waits, [1000]);
-  assert.match(log, /^Requesting token\.\.\. could not connect \(Failed to fetch\), retrying in 1 s\.\.\. ok\n/);
+  assert.match(log, /^Signing in\.\.\. could not connect \(Failed to fetch\), retrying in 1 s\.\.\. ok\n/);
 });
 
 test('gives up after three retries', async () => {

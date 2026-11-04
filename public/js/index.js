@@ -1,10 +1,14 @@
 // Home page: four charts per scooter of the stored trips, or of the example data.
 // Chart.js is loaded as a classic script before this module.
-import { monthlyStats } from './stats.js';
+import { monthLabel, monthlyStats } from './stats.js';
+import { exampleData } from './example.js';
 import { loadData, loadUnits, removeData, saveUnits } from './storage.js';
 
 const units = loadUnits();
-const { vehicles, trips } = loadData();
+const data = loadData();
+const { vehicles, trips } = data;
+
+document.getElementById('example-note').hidden = data !== exampleData;
 
 document.getElementById('change-units').addEventListener('click', () => {
   saveUnits(units === 'mi' ? 'km' : 'mi');
@@ -38,16 +42,16 @@ function addCard(sn, vehicle, title) {
 }
 
 function charts(stats, units) {
-  const labels = stats.map(({ month }) => month);
+  const labels = stats.map(({ month }) => monthLabel(month));
   const series = (key) => stats.map((month) => month[key]);
   const ranges = [
     { label: 'Range from 100% to 30%', key: 'rangeTo30', color: '#aaffaa', lineColor: '#77ff77' },
     { label: 'Range from 30% to 20%', key: 'rangeTo20', color: '#ffffaa', lineColor: '#ffff77' },
     { label: 'Range from 20% to 10%', key: 'rangeTo10', color: '#ffaaaa', lineColor: '#ff7777' },
   ];
-  const batteryLabel = `Battery percent per ${units}`;
+  const batteryLabel = `Battery used per ${units} (%)`;
   const distanceBars = () => ({
-    label: `Distance driven in ${units}`,
+    label: `Distance ridden (${units})`,
     data: series('distance'),
     backgroundColor: '#dddddd',
     yAxisID: 'y2',
@@ -72,7 +76,7 @@ function charts(stats, units) {
     },
     {
       id: 'rangeDistanceChart',
-      title: `Range in ${units} + distance driven`,
+      title: `Range in ${units} and distance ridden`,
       config: chart(
         [
           ...ranges.map(({ label, key, color, lineColor }) => ({
@@ -98,7 +102,7 @@ function charts(stats, units) {
     },
     {
       id: 'batteryDistanceChart',
-      title: `${batteryLabel} + distance driven`,
+      title: `${batteryLabel} and distance ridden`,
       config: chart(
         [
           {

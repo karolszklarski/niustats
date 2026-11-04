@@ -37,11 +37,11 @@ export async function downloadData(
 ) {
   const context = { log, fetch, wait };
 
-  log('Requesting token... ');
+  log('Signing in... ');
   const token = await signIn(context, login, passwordHash);
   log('ok\n');
 
-  log('Requesting vehicles... ');
+  log('Getting your scooters... ');
   const { items } = await request(context, SCOOTERS_URL, { headers: { 'content-type': 'application/json', token } });
   const vehicles = Object.fromEntries(items.map((item) => [item.sn_id, item]));
   log(`${Object.keys(vehicles).join()}\n`);
@@ -72,7 +72,7 @@ async function downloadTrips(context, token, sn) {
   let page = 1;
   let emptyAnswers = 0;
   for (;;) {
-    context.log(`Requesting ${sn} page ${page}... `);
+    context.log(`Getting trips for ${sn}, page ${page}... `);
     const data = await request(context, TRIPS_URL, {
       method: 'POST',
       body: new URLSearchParams({ page: String(page), token, sn }),
@@ -83,9 +83,9 @@ async function downloadTrips(context, token, sn) {
       page++;
       emptyAnswers = 0;
     } else if (++emptyAnswers < EMPTY_PAGE_ATTEMPTS) {
-      context.log('empty, retry\n');
+      context.log('empty, trying again\n');
     } else {
-      context.log('empty, ok\n');
+      context.log('no more trips\n');
       return uniqueTrips(items)
         .map((item) => ({ d: item.date, m: item.distance, b: item.power_consumption }))
         .sort((a, b) => a.d - b.d);

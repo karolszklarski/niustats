@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { monthlyStats } from '../../public/js/stats.js';
+import { monthLabel, monthlyStats } from '../../public/js/stats.js';
 
 const trip = (d, m, b) => ({ d, m, b });
 /** n trips in January 2024 with the same distance (metres) and battery use (percentage points). */
@@ -42,6 +42,12 @@ test('converts the statistics to miles', () => {
   close(mi.distance, km.distance * 0.621371192);
   close(mi.battery, km.battery / 0.621371192);
   close(mi.rangeTo30, km.rangeTo30 * 0.621371192);
+});
+
+test('names a month in English', () => {
+  assert.equal(monthLabel('201906'), 'Jun 2019');
+  assert.equal(monthLabel('202301'), 'Jan 2023');
+  assert.equal(monthLabel('202312'), 'Dec 2023');
 });
 
 test('has no months without trips', () => {

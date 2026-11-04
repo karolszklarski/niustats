@@ -15,11 +15,11 @@ document.getElementById('gatherButton').addEventListener('click', async () => {
   const passwordHash = md5(document.getElementById('password').value);
   try {
     saveData(await downloadData(login, passwordHash, { log }));
-    log('Finished\n');
+    log('Done\n');
     scrollToBottom();
     location.href = '.';
   } catch (error) {
-    log(`error: ${error.message}\n`);
+    log(`Error: ${error.message}\n`);
     scrollToBottom();
     working = false;
     // A NiuError is expected and fully reported in the log. Anything else is a bug in this page.

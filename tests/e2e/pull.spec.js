@@ -67,9 +67,9 @@ const storedTrips = (page) => page.evaluate(() => JSON.parse(localStorage.getIte
 
 async function signIn(page, login, password) {
   await page.goto('/pull.html');
-  await page.getByLabel('Phone or email').fill(login);
+  await page.getByLabel('Phone number or email').fill(login);
   await page.getByLabel('Password').fill(password);
-  await page.getByRole('button', { name: 'Gather data from Niu server' }).click();
+  await page.getByRole('button', { name: 'Sign in and load your data' }).click();
 }
 
 test('downloads scooters and trips into the browser', async ({ page }) => {
@@ -168,7 +168,7 @@ test('keeps the data stored earlier when the download fails', async ({ page }) =
 
   await signIn(page, 'rider@example.com', 'secret');
 
-  await expect(page.locator('#logs')).toHaveValue(/Requesting SN2 page 1\.\.\. error: Token expired\n$/);
+  await expect(page.locator('#logs')).toHaveValue(/Getting trips for SN2, page 1\.\.\. Error: Token expired\n$/);
   expect(
     await page.evaluate(() => ({
       vehicles: JSON.parse(localStorage.getItem('vehicles')),
@@ -215,7 +215,7 @@ test('sends the login as JSON, without surrounding spaces', async ({ page }) => 
 test('keeps browsers from correcting or capitalising the login', async ({ page }) => {
   await page.goto('/pull.html');
 
-  const login = page.getByLabel('Phone or email');
+  const login = page.getByLabel('Phone number or email');
   await expect(login).toHaveAttribute('autocomplete', 'username');
   await expect(login).toHaveAttribute('autocapitalize', 'none');
   await expect(login).toHaveAttribute('autocorrect', 'off');
@@ -228,7 +228,7 @@ test('shows the error from Niu when signing in fails', async ({ page }) => {
 
   await signIn(page, 'rider@example.com', 'wrong');
 
-  await expect(page.locator('#logs')).toHaveValue('Requesting token... error: Wrong password\n');
+  await expect(page.locator('#logs')).toHaveValue('Signing in... Error: Wrong password\n');
   expect(page.url()).toMatch(/\/pull\.html$/);
   expect(requests.scooters).toEqual([]);
   expect(await page.evaluate(() => localStorage.length)).toBe(0);
@@ -239,7 +239,7 @@ test('shows the message from Niu as text, not as HTML', async ({ page }) => {
 
   await signIn(page, 'rider@example.com', 'secret');
 
-  await expect(page.locator('#logs')).toHaveValue('Requesting token... error: <b>Locked</b> & try later\n');
+  await expect(page.locator('#logs')).toHaveValue('Signing in... Error: <b>Locked</b> & try later\n');
 });
 
 test('says when a response from Niu cannot be read', async ({ page }) => {
@@ -247,5 +247,5 @@ test('says when a response from Niu cannot be read', async ({ page }) => {
 
   await signIn(page, 'rider@example.com', 'secret');
 
-  await expect(page.locator('#logs')).toHaveValue('Requesting token... error: unexpected response from Niu (HTTP 200)\n');
+  await expect(page.locator('#logs')).toHaveValue('Signing in... Error: unexpected response from Niu (HTTP 200)\n');
 });

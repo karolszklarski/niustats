@@ -20,7 +20,7 @@ function statsTable(charts) {
   const rows = charts.range.labels.map(
     (month, i) => month + [distance[i], battery[i], to30[i], to20[i], to10[i]].map(cell).join(''),
   );
-  const header = 'month ' + ['distance', 'battery', '100%-30%', '30%-20%', '20%-10%'].map((h) => h.padStart(12)).join('');
+  const header = 'month   ' + ['distance', 'battery', '100%-30%', '30%-20%', '20%-10%'].map((h) => h.padStart(12)).join('');
   return [header, ...rows].join('\n') + '\n';
 }
 
@@ -30,11 +30,11 @@ test('shows the example scooter when nothing is stored', async ({ page }) => {
   const headers = page.locator('.card-header', { hasText: EXAMPLE_SN });
   await expect(headers).toHaveText(Array(4).fill(`Example - N-series Civic White (Gloss) - ${EXAMPLE_SN}`));
   await expect(page.locator('.card-body .card-title')).toHaveText([
-    'Get your battery capacity stats.',
+    'See how far your Niu scooter goes on a charge',
     'Range in km',
-    'Range in km + distance driven',
-    'Battery percent per km',
-    'Battery percent per km + distance driven',
+    'Range in km and distance ridden',
+    'Battery used per km (%)',
+    'Battery used per km (%) and distance ridden',
   ]);
 });
 
@@ -44,10 +44,10 @@ test.describe('without JavaScript', () => {
   test('shows the page title, description and links', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page).toHaveTitle('Niu Stats - electric scooter battery statistics');
-    await expect(page.locator('h3')).toHaveText('Niu Stats - electric scooter battery statistics');
-    await expect(page.getByText('Enter your login and password from Niu mobile app')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Load data', exact: true })).toHaveAttribute('href', 'pull.html');
+    await expect(page).toHaveTitle('Niu Stats – battery range stats for Niu electric scooters');
+    await expect(page.locator('h3')).toHaveText('Niu Stats – battery range stats for Niu electric scooters');
+    await expect(page.getByText('Sign in with your Niu app account')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Load your data', exact: true })).toHaveAttribute('href', 'pull.html');
     await expect(page.getByRole('link', { name: 'GitHub' })).toBeVisible();
   });
 });
@@ -58,9 +58,9 @@ test('charts the example data month by month', async ({ page }) => {
 
   const labels = (chart) => chart.datasets.map(({ label }) => label);
   expect(labels(charts.range)).toEqual(['Range from 100% to 30%', 'Range from 30% to 20%', 'Range from 20% to 10%']);
-  expect(labels(charts.rangeDistance)).toEqual([...labels(charts.range), 'Distance driven in km']);
-  expect(labels(charts.battery)).toEqual(['Battery percent per km']);
-  expect(labels(charts.batteryDistance)).toEqual(['Battery percent per km', 'Distance driven in km']);
+  expect(labels(charts.rangeDistance)).toEqual([...labels(charts.range), 'Distance ridden (km)']);
+  expect(labels(charts.battery)).toEqual(['Battery used per km (%)']);
+  expect(labels(charts.batteryDistance)).toEqual(['Battery used per km (%)', 'Distance ridden (km)']);
 
   // The combined charts repeat the series of the simple ones.
   const data = (chart) => chart.datasets.map((dataset) => dataset.data);
@@ -69,8 +69,8 @@ test('charts the example data month by month', async ({ page }) => {
 
   for (const chart of Object.values(charts)) expect(chart.labels).toEqual(charts.range.labels);
   expect(charts.range.labels).toHaveLength(55);
-  expect(charts.range.labels.at(0)).toBe('201906');
-  expect(charts.range.labels.at(-1)).toBe('202312');
+  expect(charts.range.labels.at(0)).toBe('Jun 2019');
+  expect(charts.range.labels.at(-1)).toBe('Dec 2023');
 
   expect(statsTable(charts)).toMatchSnapshot('example-km.txt');
 });
@@ -116,13 +116,13 @@ test('charts stored scooters instead of the example', async ({ page }) => {
 
   // January: 30 points over 15 km is 2 points per km, so 70 points take 35 km and each next 10 points 5 km.
   const sn1 = await readCharts(page, 'SN1');
-  expect(sn1.range.labels).toEqual(['202401', '202402']);
+  expect(sn1.range.labels).toEqual(['Jan 2024', 'Feb 2024']);
   expect(sn1.rangeDistance.datasets[3].data).toEqual([15, 8]);
   expect(sn1.battery.datasets[0].data).toEqual([2, 2.5]);
   expect(sn1.range.datasets.map(({ data }) => data)).toEqual([[35, 28], [5, 4], [5, 4]]);
 
   const sn2 = await readCharts(page, 'SN2');
-  expect(sn2.range.labels).toEqual(['202403']);
+  expect(sn2.range.labels).toEqual(['Mar 2024']);
   expect(sn2.battery.datasets[0].data).toEqual([1.25]);
   expect(sn2.range.datasets.map(({ data }) => data)).toEqual([[56], [8], [8]]);
 });
@@ -149,6 +149,16 @@ test('shows scooter names as text, not as HTML', async ({ page }) => {
     Array(4).fill('<img src=x onerror="window.injected=1"> - R&D - SN1'),
   );
   expect(await page.evaluate(() => window.injected)).toBeUndefined();
+});
+
+test('mentions the example scooter only while the charts show it', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#example-note')).toBeVisible();
+
+  await storeItems(page, { vehicles: { SN1: vehicles.SN1 }, trips: { SN1: [{ d: 20240105, m: 10000, b: 20 }] } });
+  await page.goto('/');
+  await expect(page.locator('.card-header', { hasText: 'SN1' })).toHaveCount(4);
+  await expect(page.locator('#example-note')).toBeHidden();
 });
 
 test('shows the example when only scooters are stored', async ({ page }) => {
@@ -201,7 +211,7 @@ test('removing the data brings back the example', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('.card-header', { hasText: 'SN1' })).toHaveCount(4);
 
-  await reloadedBy(page, () => page.getByRole('button', { name: 'Remove data' }).click());
+  await reloadedBy(page, () => page.getByRole('button', { name: 'Delete your data' }).click());
 
   await expect(page.locator('.card-header', { hasText: EXAMPLE_SN })).toHaveCount(4);
   expect(await page.evaluate(() => [localStorage.getItem('vehicles'), localStorage.getItem('trips')])).toEqual([null, null]);

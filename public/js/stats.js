@@ -5,6 +5,13 @@ const MILES_PER_KM = 0.621371192;
 /** Trips whose battery use per distance is above this percentile of all the scooter's trips are left out. */
 const OUTLIER_PERCENTILE = 0.98;
 
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** A month as yyyymm in words, in English like the rest of the site: '201906' → 'Jun 2019'. */
+export function monthLabel(month) {
+  return `${MONTH_NAMES[Number(month.slice(4)) - 1]} ${month.slice(0, 4)}`;
+}
+
 /**
  * @param {{ d: number, m: number, b: number }[]} trips date (yyyymmdd), distance (metres) and battery used
  *   (percentage points) of each trip
