@@ -113,6 +113,27 @@ test('charts stored scooters instead of the example', async ({ page }) => {
   expect(sn2.range.datasets.map(({ data }) => data)).toEqual([[56], [8], [8]]);
 });
 
+test('shows the example when only scooters are stored', async ({ page }) => {
+  await storeItems(page, { vehicles });
+  await page.goto('/');
+
+  await expect(page.locator('.card-header', { hasText: EXAMPLE_SN })).toHaveCount(4);
+});
+
+test('shows the example when only trips are stored', async ({ page }) => {
+  await storeItems(page, { trips: { SN1: [{ d: 20240105, m: 10000, b: 20 }] } });
+  await page.goto('/');
+
+  await expect(page.locator('.card-header', { hasText: EXAMPLE_SN })).toHaveCount(4);
+});
+
+test('names a scooter by its serial number when its details are missing', async ({ page }) => {
+  await storeItems(page, { vehicles: { SN1: vehicles.SN1 }, trips: { SN2: [{ d: 20240105, m: 10000, b: 20 }] } });
+  await page.goto('/');
+
+  await expect(page.locator('.card-header', { hasText: 'SN2' })).toHaveText(Array(4).fill('SN2'));
+});
+
 test('leaves out the 2% of trips with the highest battery use per km', async ({ page }) => {
   await storeItems(page, {
     vehicles: { SN1: vehicles.SN1 },

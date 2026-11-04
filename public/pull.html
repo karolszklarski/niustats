@@ -72,11 +72,15 @@
 <script>
     const logs = $('#logs');
     let working = false;
+    let vehicles = {};
     let trips = {};
 
     function getTrips(token, serialNumbers, page, retry) {
         if (serialNumbers.length === 0) {
+            // Scooters and trips are stored together, once everything has arrived,
+            // so a failed download leaves the data stored earlier as it was.
             localStorage.setItem('trips', JSON.stringify(trips));
+            localStorage.setItem('vehicles', JSON.stringify(vehicles));
             log("Finished\n");
             scrollToBottom();
             window.location.href = ".";
@@ -142,13 +146,12 @@
         }).done(function (data) {
             if (data.status === 0) {
                 const serialNumbers = [];
-                const vehicles = {};
+                vehicles = {};
                 data.data.items.forEach(function (item) {
                     serialNumbers.push(item.sn_id);
                     vehicles[item.sn_id] = item;
                 });
                 log(serialNumbers.join() + "\n");
-                localStorage.setItem('vehicles', JSON.stringify(vehicles));
                 trips = {};
                 getTrips(token, serialNumbers, 1, 0);
             } else {

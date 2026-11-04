@@ -29,14 +29,13 @@
     const distanceUnitName = localStorage.getItem('units') === 'mi' ? 'mi' : 'km';
     const distanceUnit = distanceUnitName === 'mi' ? 0.621371192 : 1;
 
-    function getJsonFromLocalStorage(key, defaultValue) {
-        const str = localStorage.getItem(key);
-        if (str === null) return JSON.parse(defaultValue);
-        return JSON.parse(str);
-    }
-
-    const vehicles = getJsonFromLocalStorage('vehicles', exampleVehicles);
-    const trips = getJsonFromLocalStorage('trips', exampleTrips);
+    // Scooters and trips are stored together. When either is missing, the example data is shown,
+    // so stored scooters are never paired with example trips or the other way round.
+    const storedVehicles = localStorage.getItem('vehicles');
+    const storedTrips = localStorage.getItem('trips');
+    const useStoredData = storedVehicles !== null && storedTrips !== null;
+    const vehicles = JSON.parse(useStoredData ? storedVehicles : exampleVehicles);
+    const trips = JSON.parse(useStoredData ? storedTrips : exampleTrips);
     const serialNumbers = Object.keys(trips);
 
     const months = {};
@@ -91,31 +90,37 @@
     </div>
 
     <script>
+        // Data stored by an earlier version of this site can lack the scooter of some trips.
+        function cardHeader(sn) {
+            const vehicle = vehicles[sn];
+            return vehicle ? '<b>' + vehicle.scooter_name + '</b> - ' + vehicle.sku_name + ' - ' + sn : sn;
+        }
+
         serialNumbers.forEach(function (sn) {
             document.write(`
                 <div class="card mb-3">
-                    <div class="card-header"><b>` + vehicles[sn].scooter_name + '</b> - ' + vehicles[sn].sku_name + ' - ' + sn + `</div>
+                    <div class="card-header">` + cardHeader(sn) + `</div>
                     <div class="card-body">
                         <h5 class="card-title">Range in ` + distanceUnitName + `</h5>
                         <canvas id="rangeChart` + sn + `"></canvas>
                     </div>
                 </div>
                 <div class="card mb-3">
-                    <div class="card-header"><b>` + vehicles[sn].scooter_name + '</b> - ' + vehicles[sn].sku_name + ' - ' + sn + `</div>
+                    <div class="card-header">` + cardHeader(sn) + `</div>
                     <div class="card-body">
                         <h5 class="card-title">Range in ` + distanceUnitName + ` + distance driven</h5>
                         <canvas id="rangeDistanceChart` + sn + `"></canvas>
                     </div>
                 </div>
                 <div class="card mb-3">
-                    <div class="card-header"><b>` + vehicles[sn].scooter_name + '</b> - ' + vehicles[sn].sku_name + ' - ' + sn + `</div>
+                    <div class="card-header">` + cardHeader(sn) + `</div>
                     <div class="card-body">
                         <h5 class="card-title">Battery percent per ` + distanceUnitName + `</h5>
                         <canvas id="batteryChart` + sn + `"></canvas>
                     </div>
                 </div>
                 <div class="card mb-3">
-                    <div class="card-header"><b>` + vehicles[sn].scooter_name + '</b> - ' + vehicles[sn].sku_name + ' - ' + sn + `</div>
+                    <div class="card-header">` + cardHeader(sn) + `</div>
                     <div class="card-body">
                         <h5 class="card-title">Battery percent per ` + distanceUnitName + ` + distance driven</h5>
                         <canvas id="batteryDistanceChart` + sn + `"></canvas>

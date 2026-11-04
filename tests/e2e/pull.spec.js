@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { test, expect } from './fixtures.js';
+import { test, expect, storeItems } from './fixtures.js';
 
 const TOKEN = 'test-token';
 
@@ -14,9 +14,13 @@ const track = (trackId, date, distance, battery) => ({ trackId, date, distance, 
 /**
  * Stubs the Niu API. The browser calls the account and scooter endpoints directly and gets the trip list
  * through track.php. `trips` holds the pages of each scooter; a page past the last one is empty.
+ * `failures` maps "<sn> <page>" to handlers that answer the first requests for that page instead.
  * Returns the requests the page made.
  */
-async function stubNiu(page, { login = { status: 0, data: { token: { access_token: TOKEN } } }, trips = {} } = {}) {
+async function stubNiu(
+  page,
+  { login = { status: 0, data: { token: { access_token: TOKEN } } }, trips = {}, failures = {} } = {},
+) {
   const requests = { login: [], scooters: [], tracks: [] };
   const cors = {
     'access-control-allow-origin': '*',
@@ -46,6 +50,8 @@ async function stubNiu(page, { login = { status: 0, data: { token: { access_toke
     const form = new URLSearchParams(route.request().postData());
     const request = { sn: form.get('sn'), page: Number(form.get('page')), token: form.get('token') };
     requests.tracks.push(request);
+    const failure = failures[`${request.sn} ${request.page}`]?.shift();
+    if (failure) return failure(route);
     return route.fulfill({ json: { status: 0, data: { items: trips[request.sn]?.[request.page - 1] ?? [] } } });
   });
   return requests;
@@ -141,6 +147,28 @@ test('keeps every trip that has no id', async ({ page }) => {
     { d: 20240105, m: 10000, b: 20 },
     { d: 20240110, m: 5000, b: 10 },
   ]);
+});
+
+test('keeps the data stored earlier when the download fails', async ({ page }) => {
+  const earlier = {
+    vehicles: { OLD: { sn_id: 'OLD', scooter_name: 'Old', sku_name: 'N1S' } },
+    trips: { OLD: [{ d: 20230105, m: 10000, b: 20 }] },
+  };
+  await storeItems(page, earlier);
+  await stubNiu(page, {
+    trips: { SN1: [[track('a', 20240105, 10000, 20)]] },
+    failures: { 'SN2 1': [(route) => route.fulfill({ json: { status: 1, desc: 'Token expired' } })] },
+  });
+
+  await signIn(page, 'rider@example.com', 'secret');
+
+  await expect(page.locator('#logs')).toHaveValue(/Requesting SN2 page 1\.\.\. error: Token expired\n$/);
+  expect(
+    await page.evaluate(() => ({
+      vehicles: JSON.parse(localStorage.getItem('vehicles')),
+      trips: JSON.parse(localStorage.getItem('trips')),
+    })),
+  ).toEqual(earlier);
 });
 
 test('sends the login as JSON, without surrounding spaces', async ({ page }) => {
