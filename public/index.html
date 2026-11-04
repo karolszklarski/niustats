@@ -16,7 +16,6 @@
     <link href="favicon.ico" rel="icon" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    <script src="example.js"></script>
     <style>
         canvas {
             max-height: 50vh;
@@ -24,51 +23,6 @@
     </style>
 </head>
 <body>
-
-<script>
-    const distanceUnitName = localStorage.getItem('units') === 'mi' ? 'mi' : 'km';
-    const distanceUnit = distanceUnitName === 'mi' ? 0.621371192 : 1;
-
-    // Scooters and trips are stored together. When either is missing, the example data is shown,
-    // so stored scooters are never paired with example trips or the other way round.
-    const storedVehicles = localStorage.getItem('vehicles');
-    const storedTrips = localStorage.getItem('trips');
-    const useStoredData = storedVehicles !== null && storedTrips !== null;
-    const vehicles = JSON.parse(useStoredData ? storedVehicles : exampleVehicles);
-    const trips = JSON.parse(useStoredData ? storedTrips : exampleTrips);
-    const serialNumbers = Object.keys(trips);
-
-    const months = {};
-    const monthDistances = {};
-    const monthBatteries = {};
-    const monthRanges30 = {};
-    const monthRanges20 = {};
-    const monthRanges10 = {};
-    serialNumbers.forEach(function (sn) {
-        const maxRatioTrip = Array.from(trips[sn]).sort((a, b) => a.b / a.m - b.b / b.m)[Math.ceil((trips[sn].length) * 0.98)-1];
-        const maxRatio = maxRatioTrip != null ? maxRatioTrip.b / maxRatioTrip.m : null;
-        months[sn] = [];
-        trips[sn].filter((t) => t.b > 0 && t.b / t.m <= maxRatio).forEach(function (t) {
-            const key = Math.floor(t.d / 100);
-            if (!months[sn].hasOwnProperty(key)) {
-                months[sn][key] = [];
-            }
-            months[sn][key].push(t);
-        });
-        monthDistances[sn] = {};
-        monthBatteries[sn] = {};
-        monthRanges30[sn] = {};
-        monthRanges20[sn] = {};
-        monthRanges10[sn] = {};
-        Object.keys(months[sn]).forEach(function (month) {
-            monthDistances[sn][month] = months[sn][month].reduce((acc, curr) => acc + curr.m, 0) * distanceUnit / 1000;
-            monthBatteries[sn][month] = months[sn][month].reduce((acc, curr) => acc + curr.b, 0) / monthDistances[sn][month];
-            monthRanges30[sn][month] = 70 / monthBatteries[sn][month];
-            monthRanges20[sn][month] = 80 / monthBatteries[sn][month] - monthRanges30[sn][month];
-            monthRanges10[sn][month] = 90 / monthBatteries[sn][month] - monthRanges30[sn][month] - monthRanges20[sn][month];
-        });
-    });
-</script>
 
 <div class="container">
     <div class="card mt-3 mb-3">
@@ -81,263 +35,31 @@
             </p>
             <a class="btn btn-primary btn-sm" href="pull.html" role="button">Load data</a>
             <a class="btn btn-warning btn-sm" href="data.html" role="button">Download data</a>
-            <button type="button" class="btn btn-warning btn-sm" onclick="changeUnits()">Change units</button>
-            <button type="button" class="btn btn-danger btn-sm" onclick="removeData()">Remove data</button>
+            <button type="button" class="btn btn-warning btn-sm" id="change-units">Change units</button>
+            <button type="button" class="btn btn-danger btn-sm" id="remove-data">Remove data</button>
         </div>
         <div class="card-footer text-body-secondary">
             <a class="text-muted" href="https://github.com/karolszklarski/niustats">GitHub</a>
         </div>
     </div>
 
-    <script>
-        // Data stored by an earlier version of this site can lack the scooter of some trips.
-        function cardHeader(sn) {
-            const vehicle = vehicles[sn];
-            return vehicle ? '<b>' + vehicle.scooter_name + '</b> - ' + vehicle.sku_name + ' - ' + sn : sn;
-        }
-
-        serialNumbers.forEach(function (sn) {
-            document.write(`
-                <div class="card mb-3">
-                    <div class="card-header">` + cardHeader(sn) + `</div>
-                    <div class="card-body">
-                        <h5 class="card-title">Range in ` + distanceUnitName + `</h5>
-                        <canvas id="rangeChart` + sn + `"></canvas>
-                    </div>
-                </div>
-                <div class="card mb-3">
-                    <div class="card-header">` + cardHeader(sn) + `</div>
-                    <div class="card-body">
-                        <h5 class="card-title">Range in ` + distanceUnitName + ` + distance driven</h5>
-                        <canvas id="rangeDistanceChart` + sn + `"></canvas>
-                    </div>
-                </div>
-                <div class="card mb-3">
-                    <div class="card-header">` + cardHeader(sn) + `</div>
-                    <div class="card-body">
-                        <h5 class="card-title">Battery percent per ` + distanceUnitName + `</h5>
-                        <canvas id="batteryChart` + sn + `"></canvas>
-                    </div>
-                </div>
-                <div class="card mb-3">
-                    <div class="card-header">` + cardHeader(sn) + `</div>
-                    <div class="card-body">
-                        <h5 class="card-title">Battery percent per ` + distanceUnitName + ` + distance driven</h5>
-                        <canvas id="batteryDistanceChart` + sn + `"></canvas>
-                    </div>
-                </div>
-            `);
-        });
-    </script>
+    <div id="charts"></div>
 </div>
+
+<template id="chart-card">
+    <div class="card mb-3">
+        <div class="card-header"><b class="scooter-name"></b><span class="scooter-details"></span></div>
+        <div class="card-body">
+            <h5 class="card-title"></h5>
+            <canvas></canvas>
+        </div>
+    </div>
+</template>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-
-    serialNumbers.forEach(function (sn) {
-
-        new Chart(document.getElementById('rangeChart' + sn), {
-            type: 'bar',
-            data: {
-                labels: Object.keys(months[sn]),
-                datasets: [
-                    {
-                        label: 'Range from 100% to 30%',
-                        data: Object.values(monthRanges30[sn]),
-                        backgroundColor: '#aaffaa',
-                    },
-                    {
-                        label: 'Range from 30% to 20%',
-                        data: Object.values(monthRanges20[sn]),
-                        backgroundColor: '#ffffaa',
-                    },
-                    {
-                        label: 'Range from 20% to 10%',
-                        data: Object.values(monthRanges10[sn]),
-                        backgroundColor: '#ffaaaa',
-                    },
-                ]
-            },
-            options: {
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        stacked: true,
-                        grid: {
-                            drawOnChartArea: false,
-                        },
-                    },
-                    y: {
-                        stacked: true,
-                        beginAtZero: true,
-                        grid: {
-                            z: 100,
-                            color: '#44dd44',
-                        },
-                    },
-                }
-            }
-        });
-
-        new Chart(document.getElementById('rangeDistanceChart' + sn), {
-            type: 'bar',
-            data: {
-                labels: Object.keys(months[sn]),
-                datasets: [
-                    {
-                        label: 'Range from 100% to 30%',
-                        data: Object.values(monthRanges30[sn]),
-                        backgroundColor: '#aaffaa',
-                        borderColor: '#77ff77',
-                        type: 'line',
-                        yAxisID: 'y',
-                    },
-                    {
-                        label: 'Range from 30% to 20%',
-                        data: Object.values(monthRanges20[sn]),
-                        backgroundColor: '#ffffaa',
-                        borderColor: '#ffff77',
-                        type: 'line',
-                        yAxisID: 'y',
-                    },
-                    {
-                        label: 'Range from 20% to 10%',
-                        data: Object.values(monthRanges10[sn]),
-                        backgroundColor: '#ffaaaa',
-                        borderColor: '#ff7777',
-                        type: 'line',
-                        yAxisID: 'y',
-                    },
-                    {
-                        label: 'Distance driven in ' + distanceUnitName,
-                        data: Object.values(monthDistances[sn]),
-                        backgroundColor: '#dddddd',
-                        yAxisID: 'y2',
-                    },
-                ]
-            },
-            options: {
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        stacked: true,
-                        grid: {
-                            drawOnChartArea: false,
-                        },
-                    },
-                    y: {
-                        stacked: true,
-                        beginAtZero: true,
-                        grid: {
-                            z: 100,
-                            color: '#44dd44',
-                        },
-                    },
-                    y2: {
-                        beginAtZero: true,
-                        position: 'right',
-                        grid: {
-                            drawOnChartArea: false,
-                        },
-                    },
-                }
-            }
-        });
-
-        new Chart(document.getElementById('batteryChart' + sn), {
-            type: 'bar',
-            data: {
-                labels: Object.keys(months[sn]),
-                datasets: [
-                    {
-                        label: 'Battery percent per ' + distanceUnitName,
-                        data: Object.values(monthBatteries[sn]),
-                        backgroundColor: '#ccccff',
-                    },
-                ]
-            },
-            options: {
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        grid: {
-                            drawOnChartArea: false,
-                        },
-                    },
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            z: 100,
-                            color: '#aaaaff',
-                        },
-                    },
-                }
-            }
-        });
-
-        new Chart(document.getElementById('batteryDistanceChart' + sn), {
-            type: 'bar',
-            data: {
-                labels: Object.keys(months[sn]),
-                datasets: [
-                    {
-                        label: 'Battery percent per ' + distanceUnitName,
-                        data: Object.values(monthBatteries[sn]),
-                        backgroundColor: '#ccccff',
-                        borderColor: '#9999ff',
-                        type: 'line',
-                        yAxisID: 'y',
-                    },
-                    {
-                        label: 'Distance driven in ' + distanceUnitName,
-                        data: Object.values(monthDistances[sn]),
-                        backgroundColor: '#dddddd',
-                        yAxisID: 'y2',
-                    },
-                ]
-            },
-            options: {
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        grid: {
-                            drawOnChartArea: false,
-                        },
-                    },
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            z: 100,
-                            color: '#aaaaff',
-                        },
-                    },
-                    y2: {
-                        beginAtZero: true,
-                        position: 'right',
-                        grid: {
-                            drawOnChartArea: false,
-                        },
-                    },
-                }
-            }
-        });
-
-    });
-
-    function removeData() {
-        localStorage.removeItem('trips');
-        localStorage.removeItem('vehicles');
-        location.reload();
-    }
-
-    function changeUnits() {
-        if (distanceUnitName === 'mi') localStorage.removeItem('units');
-        else localStorage.setItem('units', 'mi');
-        location.reload();
-    }
-</script>
+<script type="module" src="js/index.js"></script>
 </body>
 </html>

@@ -38,6 +38,20 @@ test('shows the example scooter when nothing is stored', async ({ page }) => {
   ]);
 });
 
+test.describe('without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+
+  test('shows the page title, description and links', async ({ page }) => {
+    await page.goto('/');
+
+    await expect(page).toHaveTitle('Niu Stats - electric scooter battery statistics');
+    await expect(page.locator('h3')).toHaveText('Niu Stats - electric scooter battery statistics');
+    await expect(page.getByText('Enter your login and password from Niu mobile app')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Load data', exact: true })).toHaveAttribute('href', 'pull.html');
+    await expect(page.getByRole('link', { name: 'GitHub' })).toBeVisible();
+  });
+});
+
 test('charts the example data month by month', async ({ page }) => {
   await page.goto('/');
   const charts = await readCharts(page, EXAMPLE_SN);
@@ -111,6 +125,19 @@ test('charts stored scooters instead of the example', async ({ page }) => {
   expect(sn2.range.labels).toEqual(['202403']);
   expect(sn2.battery.datasets[0].data).toEqual([1.25]);
   expect(sn2.range.datasets.map(({ data }) => data)).toEqual([[56], [8], [8]]);
+});
+
+test('shows scooter names as text, not as HTML', async ({ page }) => {
+  await storeItems(page, {
+    vehicles: { SN1: { sn_id: 'SN1', scooter_name: '<img src=x onerror="window.injected=1">', sku_name: 'R&D' } },
+    trips: { SN1: [{ d: 20240105, m: 10000, b: 20 }] },
+  });
+  await page.goto('/');
+
+  await expect(page.locator('.card-header', { hasText: 'SN1' })).toHaveText(
+    Array(4).fill('<img src=x onerror="window.injected=1"> - R&D - SN1'),
+  );
+  expect(await page.evaluate(() => window.injected)).toBeUndefined();
 });
 
 test('shows the example when only scooters are stored', async ({ page }) => {

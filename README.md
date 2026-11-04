@@ -28,14 +28,14 @@ The same statistics are available in miles.
 
 ## Development
 
-The site in `public/` is plain HTML, JavaScript and PHP, with no build step: the files are served exactly as they are in the repository.
+The site in `public/` is plain HTML, JavaScript modules and PHP, with no build step: the files are served exactly as they are in the repository. The page scripts and the modules they share are in `public/js/`.
 
 Requirements: Node.js 24.
 
 ```sh
 npm ci
 npx playwright install chromium   # once, the browser for the tests
-npm test                          # browser tests
+npm test                          # unit tests of the modules, then browser tests
 npm run serve                     # local preview at http://127.0.0.1:4326/
 ```
 

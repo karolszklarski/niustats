@@ -6,13 +6,16 @@ This repository is public and linked from the site.
 
 ## Layout
 
-- `public/`: the site exactly as it is served. Plain HTML, JavaScript and PHP, with no build step, so that what runs in the browser can be read in the repository.
-  - `index.html`: charts the trips stored in `localStorage`, or the example data from `example.js`.
+- `public/`: the site exactly as it is served. Plain HTML, JavaScript modules and PHP, with no build step, so that what runs in the browser can be read in the repository.
+  - `index.html` with `js/index.js`: charts the trips stored in `localStorage`, or the example data.
   - `pull.html`: signs in to Niu and stores the user's scooters and trips in `localStorage`.
-  - `data.html`: the stored trips as CSV.
+  - `data.html` with `js/data.js`: the same trips as CSV.
+  - `js/stats.js`: the monthly statistics. `js/storage.js`: the data in `localStorage`. `js/example.js`: the example data.
+  - Text that search engines should read stays in the HTML. Scripts add only the charts and the data.
   - `track.php`: forwards trip list requests to Niu with the mobile app's `User-Agent`, which a web page cannot set.
   - `.htaccess`: HTTPS and `www` redirects and cache headers on the host (Apache).
 - `scripts/serve.js`: static server for local preview and for the tests. It does not run PHP.
+- `tests/unit/`: `node:test` tests of the modules in `public/js/`.
 - `tests/e2e/`: Playwright browser tests. `fixtures.js` holds the shared setup.
 
 ## Commands
@@ -20,7 +23,7 @@ This repository is public and linked from the site.
 ```sh
 npm ci
 npx playwright install chromium   # once
-npm test
+npm test                          # npm run test:unit, then npm run test:e2e
 npm run serve                     # http://127.0.0.1:4326/
 ```
 
