@@ -1,0 +1,22 @@
+{
+  "name": "niustats",
+  "private": true,
+  "description": "Battery range statistics for Niu electric scooters",
+  "homepage": "https://niustats.com",
+  "repository": "github:karolszklarski/niustats",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "serve": "node scripts/serve.js",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "bootstrap": "5.3.2",
+    "chart.js": "4.5.1",
+    "jquery": "3.7.1"
+  }
+}
