@@ -19,10 +19,6 @@ const cdnFiles = new Map([
     'https://cdn.jsdelivr.net/npm/chart.js',
     { path: nodeModule('chart.js/dist/chart.umd.min.js'), contentType: 'text/javascript' },
   ],
-  [
-    'https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js',
-    { path: nodeModule('jquery/dist/jquery.min.js'), contentType: 'text/javascript' },
-  ],
 ]);
 
 export const test = base.extend({

@@ -13,13 +13,19 @@ const track = (trackId, date, distance, battery) => ({ trackId, date, distance, 
 
 /**
  * Stubs the Niu API. The browser calls the account and scooter endpoints directly and gets the trip list
- * through track.php. `trips` holds the pages of each scooter; a page past the last one is empty.
+ * through track.php. `login` is the answer to signing in, as JSON, or `loginResponse` the whole response.
+ * `trips` holds the pages of each scooter; a page past the last one is empty.
  * `failures` maps "<sn> <page>" to handlers that answer the first requests for that page instead.
  * Returns the requests the page made.
  */
 async function stubNiu(
   page,
-  { login = { status: 0, data: { token: { access_token: TOKEN } } }, trips = {}, failures = {} } = {},
+  {
+    login = { status: 0, data: { token: { access_token: TOKEN } } },
+    loginResponse = { json: login },
+    trips = {},
+    failures = {},
+  } = {},
 ) {
   const requests = { login: [], scooters: [], tracks: [] };
   const cors = {
@@ -30,20 +36,20 @@ async function stubNiu(
   const crossOrigin = (handle) => (route) =>
     route.request().method() === 'OPTIONS'
       ? route.fulfill({ status: 204, headers: cors })
-      : route.fulfill({ json: handle(route.request()), headers: cors });
+      : route.fulfill({ ...handle(route.request()), headers: cors });
 
   await page.route(
     'https://account-fk.niu.com/v3/api/oauth2/token',
     crossOrigin((request) => {
       requests.login.push(request.postDataJSON());
-      return login;
+      return loginResponse;
     }),
   );
   await page.route(
     'https://app-api-fk.niu.com/v5/scooter/list',
     crossOrigin((request) => {
       requests.scooters.push({ token: request.headers().token });
-      return { status: 0, data: { items: scooters } };
+      return { json: { status: 0, data: { items: scooters } } };
     }),
   );
   await page.route('**/track.php', (route) => {
@@ -200,4 +206,20 @@ test('shows the error from Niu when signing in fails', async ({ page }) => {
   expect(page.url()).toMatch(/\/pull\.html$/);
   expect(requests.scooters).toEqual([]);
   expect(await page.evaluate(() => localStorage.length)).toBe(0);
+});
+
+test('shows the message from Niu as text, not as HTML', async ({ page }) => {
+  await stubNiu(page, { login: { status: 1, desc: '<b>Locked</b> & try later' } });
+
+  await signIn(page, 'rider@example.com', 'secret');
+
+  await expect(page.locator('#logs')).toHaveValue('Requesting token... error: <b>Locked</b> & try later\n');
+});
+
+test('says when a response from Niu cannot be read', async ({ page }) => {
+  await stubNiu(page, { loginResponse: { contentType: 'text/html', body: '<html>Service unavailable</html>' } });
+
+  await signIn(page, 'rider@example.com', 'secret');
+
+  await expect(page.locator('#logs')).toHaveValue('Requesting token... error: unexpected response from Niu (HTTP 200)\n');
 });

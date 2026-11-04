@@ -8,9 +8,10 @@ This repository is public and linked from the site.
 
 - `public/`: the site exactly as it is served. Plain HTML, JavaScript modules and PHP, with no build step, so that what runs in the browser can be read in the repository.
   - `index.html` with `js/index.js`: charts the trips stored in `localStorage`, or the example data.
-  - `pull.html`: signs in to Niu and stores the user's scooters and trips in `localStorage`.
+  - `pull.html` with `js/pull.js`: signs in to Niu and stores the user's scooters and trips in `localStorage`.
   - `data.html` with `js/data.js`: the same trips as CSV.
-  - `js/stats.js`: the monthly statistics. `js/storage.js`: the data in `localStorage`. `js/example.js`: the example data.
+  - `js/niu.js`: the Niu API client. `js/stats.js`: the monthly statistics. `js/storage.js`: the data in `localStorage`. `js/example.js`: the example data.
+  - `md5.min.js`: blueimp-md5, which hashes the password the way the Niu app does.
   - Text that search engines should read stays in the HTML. Scripts add only the charts and the data.
   - `track.php`: forwards trip list requests to Niu with the mobile app's `User-Agent`, which a web page cannot set.
   - `.htaccess`: HTTPS and `www` redirects and cache headers on the host (Apache).

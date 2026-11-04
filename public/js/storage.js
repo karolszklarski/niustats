@@ -13,6 +13,15 @@ export function loadData(storage = localStorage) {
   return { vehicles: JSON.parse(vehicles), trips: JSON.parse(trips) };
 }
 
+/**
+ * Stores scooters and trips together, once a download is complete, so a failed download leaves
+ * the data stored earlier as it was.
+ */
+export function saveData({ vehicles, trips }, storage = localStorage) {
+  storage.setItem('trips', JSON.stringify(trips));
+  storage.setItem('vehicles', JSON.stringify(vehicles));
+}
+
 export function removeData(storage = localStorage) {
   storage.removeItem('trips');
   storage.removeItem('vehicles');

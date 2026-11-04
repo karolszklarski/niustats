@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { exampleData } from '../../public/js/example.js';
-import { loadData, loadUnits, removeData, saveUnits } from '../../public/js/storage.js';
+import { loadData, loadUnits, removeData, saveData, saveUnits } from '../../public/js/storage.js';
 
 /** The part of the Web Storage API the site uses, kept in memory. */
 class MemoryStorage {
@@ -40,6 +40,12 @@ test('loads the example data unless scooters and trips are both stored', () => {
   for (const items of [{}, { vehicles: JSON.stringify(vehicles) }, { trips: JSON.stringify(trips) }]) {
     assert.equal(loadData(new MemoryStorage(items)), exampleData, Object.keys(items).join() || 'nothing stored');
   }
+});
+
+test('stores scooters and trips for the next visit', () => {
+  const storage = new MemoryStorage();
+  saveData({ vehicles, trips }, storage);
+  assert.deepEqual(loadData(storage), { vehicles, trips });
 });
 
 test('removes the scooters and trips but keeps the units', () => {
