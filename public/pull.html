@@ -108,7 +108,7 @@
                         getTrips(token, serialNumbers, page, retry + 1);
                     } else {
                         log("empty, ok\n");
-                        trips[sn] = trips[sn].filter(duplicates).sort((a, b) => a.d - b.d);
+                        trips[sn] = uniqueTrips(trips[sn]).sort((a, b) => a.d - b.d);
                         trips[sn].forEach(function (item) {
                             delete item.id;
                         });
@@ -214,8 +214,16 @@
         logs.scrollTop(logs[0].scrollHeight);
     }
 
-    function duplicates(trip, index, trips) {
-        return trips.findIndex((t, i) => i !== index && t.id === trip.id) < 0;
+    // Niu can list the same trip on two pages. Keeps the first copy of each trip id;
+    // trips without an id cannot be compared, so all of them are kept.
+    function uniqueTrips(trips) {
+        const seen = new Set();
+        return trips.filter(function (trip) {
+            if (trip.id == null) return true;
+            if (seen.has(trip.id)) return false;
+            seen.add(trip.id);
+            return true;
+        });
     }
 
     function scrollToBottom() {

@@ -51,6 +51,8 @@ async function stubNiu(page, { login = { status: 0, data: { token: { access_toke
   return requests;
 }
 
+const storedTrips = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('trips')));
+
 async function signIn(page, login, password) {
   await page.goto('/pull.html');
   await page.getByLabel('Phone or email').fill(login);
@@ -103,6 +105,42 @@ test('downloads scooters and trips into the browser', async ({ page }) => {
   });
   await expect(page.locator('.card-header', { hasText: 'Blue - NQi GTS - SN1' })).toHaveCount(4);
   await expect(page.locator('.card-header', { hasText: 'Red - MQi+ - SN2' })).toHaveCount(4);
+});
+
+test('keeps one copy of a trip that Niu lists on two pages', async ({ page }) => {
+  await stubNiu(page, {
+    trips: {
+      SN1: [
+        [track('a', 20240105, 10000, 20), track('b', 20240110, 5000, 10)],
+        [track('b', 20240110, 5000, 10), track('c', 20240203, 8000, 20)],
+      ],
+    },
+  });
+
+  await signIn(page, 'rider@example.com', 'secret');
+  await page.waitForURL((url) => url.pathname === '/');
+
+  expect(await storedTrips(page)).toEqual({
+    SN1: [
+      { d: 20240105, m: 10000, b: 20 },
+      { d: 20240110, m: 5000, b: 10 },
+      { d: 20240203, m: 8000, b: 20 },
+    ],
+    SN2: [],
+  });
+});
+
+test('keeps every trip that has no id', async ({ page }) => {
+  const withoutId = (date, distance, battery) => ({ date, distance, power_consumption: battery });
+  await stubNiu(page, { trips: { SN1: [[withoutId(20240105, 10000, 20), withoutId(20240110, 5000, 10)]] } });
+
+  await signIn(page, 'rider@example.com', 'secret');
+  await page.waitForURL((url) => url.pathname === '/');
+
+  expect((await storedTrips(page)).SN1).toEqual([
+    { d: 20240105, m: 10000, b: 20 },
+    { d: 20240110, m: 5000, b: 10 },
+  ]);
 });
 
 test('sends the login as JSON, without surrounding spaces', async ({ page }) => {
