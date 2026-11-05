@@ -5,6 +5,12 @@ const MILES_PER_KM = 0.621371192;
 /** Trips whose battery use per distance is above this percentile of all the scooter's trips are left out. */
 const OUTLIER_PERCENTILE = 0.98;
 
+/** With fewer trips than this, the percentile would leave nothing out. */
+const TRIPS_FOR_PERCENTILE = 50;
+
+/** So with fewer trips, those above this battery use per metre (5% per km) are left out instead. */
+const MAX_BATTERY_PER_METRE = 5 / 1000;
+
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /** A month as yyyymm in words, in English like the rest of the site: '201906' → 'Jun 2019'. */
@@ -47,12 +53,15 @@ export function monthlyStats(trips, units = 'km') {
 }
 
 /**
- * The trips that used some battery, without those above the outlier percentile of battery use per distance:
- * mostly very short trips and faulty readings. With fewer than 50 trips, no trip is above the percentile.
+ * The trips that used some battery, without those above the limit of battery use per distance: mostly very short
+ * trips and faulty readings. The limit is the outlier percentile or, with too few trips for that, a fixed value.
  */
 function withoutOutliers(trips) {
   const batteryPerMetre = (trip) => trip.b / trip.m;
-  const sorted = trips.map(batteryPerMetre).sort((a, b) => a - b);
-  const limit = sorted[Math.ceil(trips.length * OUTLIER_PERCENTILE) - 1];
+  const percentileLimit = () => {
+    const sorted = trips.map(batteryPerMetre).sort((a, b) => a - b);
+    return sorted[Math.ceil(trips.length * OUTLIER_PERCENTILE) - 1];
+  };
+  const limit = trips.length < TRIPS_FOR_PERCENTILE ? MAX_BATTERY_PER_METRE : percentileLimit();
   return trips.filter((trip) => trip.b > 0 && batteryPerMetre(trip) <= limit);
 }

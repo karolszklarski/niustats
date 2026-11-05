@@ -209,7 +209,19 @@ test('leaves out the 2% of trips with the highest battery use per km', async ({ 
   expect(charts.battery.datasets[0].data).toEqual([2]);
 });
 
-test('keeps every trip when there are fewer than 50', async ({ page }) => {
+test('keeps trips of up to 5% per km when there are fewer than 50', async ({ page }) => {
+  await storeItems(page, {
+    vehicles: { SN1: vehicles.SN1 },
+    trips: { SN1: [...januaryTrips(48, 10000, 20), { d: 20240131, m: 1000, b: 5 }] },
+  });
+  await page.goto('/');
+
+  const charts = await readCharts(page, 'SN1');
+  expect(charts.rangeDistance.datasets[3].data).toEqual([481]);
+  expect(charts.battery.datasets[0].data[0]).toBeCloseTo(965 / 481, 12);
+});
+
+test('leaves out trips above 5% per km when there are fewer than 50', async ({ page }) => {
   await storeItems(page, {
     vehicles: { SN1: vehicles.SN1 },
     trips: { SN1: [...januaryTrips(48, 10000, 20), { d: 20240131, m: 1000, b: 50 }] },
@@ -217,8 +229,8 @@ test('keeps every trip when there are fewer than 50', async ({ page }) => {
   await page.goto('/');
 
   const charts = await readCharts(page, 'SN1');
-  expect(charts.rangeDistance.datasets[3].data).toEqual([481]);
-  expect(charts.battery.datasets[0].data[0]).toBeCloseTo(1010 / 481, 12);
+  expect(charts.rangeDistance.datasets[3].data).toEqual([480]);
+  expect(charts.battery.datasets[0].data).toEqual([2]);
 });
 
 test('removing the data brings back the example', async ({ page }) => {

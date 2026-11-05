@@ -30,9 +30,31 @@ test('leaves out trips above the 98th percentile of battery use per distance', (
   assert.equal(january.battery, 2);
 });
 
-test('keeps every trip when there are fewer than 50', () => {
-  const [january] = monthlyStats([...januaryTrips(48, 10000, 20), trip(20240131, 1000, 50)]);
+test('keeps trips of up to 5% per km when there are fewer than 50', () => {
+  const [january] = monthlyStats([...januaryTrips(48, 10000, 20), trip(20240131, 1000, 5)]);
   assert.equal(january.distance, 481);
+});
+
+test('leaves out trips above 5% per km when there are fewer than 50', () => {
+  const [january] = monthlyStats([...januaryTrips(48, 10000, 20), trip(20240131, 1000, 6)]);
+  assert.equal(january.distance, 480);
+  assert.equal(january.battery, 2);
+});
+
+test('goes by the percentile alone from 50 trips', () => {
+  const [january] = monthlyStats([...januaryTrips(48, 10000, 20), trip(20240130, 1000, 6), trip(20240131, 1000, 6)]);
+  assert.equal(january.distance, 482);
+});
+
+test('has no month for a single faulty reading', () => {
+  assert.deepEqual(monthlyStats([trip(20240105, 3000, 60)]), []);
+});
+
+test('leaves out a trip without a distance', () => {
+  assert.deepEqual(monthlyStats([trip(20240105, 0, 3)]), []);
+  const [january] = monthlyStats([trip(20240105, 0, 3), trip(20240106, 8000, 16)]);
+  assert.equal(january.distance, 8);
+  assert.equal(january.battery, 2);
 });
 
 test('converts the statistics to miles', () => {
