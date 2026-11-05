@@ -1,9 +1,9 @@
 name: Tests
 
+# Pull requests run this directly. A push to main runs it as the first step of deploy.yml.
 on:
-  push:
-    branches: [main]
   pull_request:
+  workflow_call:
 
 permissions:
   contents: read

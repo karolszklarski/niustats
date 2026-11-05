@@ -1,5 +1,8 @@
 Options -MultiViews -Indexes
 
+# When the host deploys through Git, .git sits in the site directory.
+RedirectMatch 404 (^|/)\.git(/|$)
+
 <IfModule mod_headers.c>
     # Browsers check every file each time, and an unchanged file comes back as a short 304 answer.
     # File names carry no version, so a longer cache would keep old code in returning visitors' browsers.

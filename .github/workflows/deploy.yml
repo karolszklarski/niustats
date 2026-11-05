@@ -1,0 +1,79 @@
+name: Deploy
+
+# A push to main runs the tests, then publishes public/ to this site's branch in a private repository with the
+# ready files of several sites, from which the web host deploys them.
+#
+# DEPLOY_REPOSITORY names that repository, as owner/name. It is a secret rather than a variable because the logs
+# of a public repository show the values of variables.
+#
+# The deploy key in DEPLOY_KEY can write to the branches of all those sites. So only the publish job gets it, and
+# that job runs no code from this repository (no npm, no scripts): it only copies files. This workflow has no
+# pull_request trigger, so a pull request cannot reach the key.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# One run at a time, so that an older commit cannot overwrite a newer one.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+
+  publish:
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Publish public/
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          DEPLOY_REPOSITORY: ${{ secrets.DEPLOY_REPOSITORY }}
+          BRANCH: niustats.com
+        run: |
+          if [ -z "$DEPLOY_KEY" ] || [ -z "$DEPLOY_REPOSITORY" ]; then
+            echo "::error::The DEPLOY_KEY or DEPLOY_REPOSITORY secret is missing (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+          remote="git@github.com:$DEPLOY_REPOSITORY.git"
+          key="$RUNNER_TEMP/deploy-key"
+          printf '%s\n' "$DEPLOY_KEY" > "$key"
+          chmod 600 "$key"
+          # GitHub's host key is fixed here, so ssh cannot trust another server:
+          # https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints
+          echo 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > "$RUNNER_TEMP/known_hosts"
+          export GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o UserKnownHostsFile=$RUNNER_TEMP/known_hosts"
+
+          # Each deployment is a new commit on top of the branch, with no force push, so the host can simply pull it.
+          work="$RUNNER_TEMP/site"
+          if [ -n "$(git ls-remote --heads "$remote" "$BRANCH")" ]; then
+            git clone --quiet --branch "$BRANCH" --single-branch --depth 1 "$remote" "$work"
+          else
+            git init --quiet -b "$BRANCH" "$work"
+            git -C "$work" remote add origin "$remote"
+          fi
+
+          rsync -a --delete --exclude .git public/ "$work/"
+          git -C "$work" add -A
+
+          if git -C "$work" diff --cached --quiet; then
+            echo "The site has not changed, nothing to publish."
+            exit 0
+          fi
+
+          git -C "$work" \
+            -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit --quiet -m "Deploy ${GITHUB_SHA:0:7}"
+          git -C "$work" push --quiet origin "$BRANCH"
+          echo "Published to the $BRANCH branch."

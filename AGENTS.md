@@ -16,7 +16,7 @@ This repository is public and linked from the site.
   - `vendor/`: Bootstrap's CSS, Chart.js, blueimp-md5 (which hashes the password the way the Niu app does) and vanilla-cookieconsent, with their licences. They are copies of the npm packages pinned in `package.json`, made by `npm run vendor`, never edited by hand. A unit test checks that they match the installed packages.
   - Text that search engines should read stays in the HTML. Scripts add only the charts, the data and the cookie banner.
   - `track.php`: forwards trip list requests to Niu with the mobile app's `User-Agent`, which a web page cannot set. It cannot be replaced by a direct request from the browser: with a valid token, the `v3` and `v2` trip lists answered such a request with HTTP 500 (checked in November 2026), although Niu allows any origin. It accepts only a page number, a serial number and a token of the expected characters, because they go into the request to Niu, and sends back only the trip fields the site uses.
-  - `.htaccess`: HTTPS and `www` redirects on the host (Apache), and `no-cache` for every file, because file names carry no version.
+  - `.htaccess`: HTTPS and `www` redirects on the host (Apache), `no-cache` for every file, because file names carry no version, and 404 for `.git`, which sits in the site directory when the host deploys through Git.
 - `scripts/serve.js`: static server for local preview and for the tests. It does not run PHP.
 - `tests/unit/`: `node:test` tests of the modules in `public/js/`.
 - `tests/php/`: `node:test` tests in Docker: `track.php` on PHP, with `niu-stub.php` standing in for the Niu API, and `.htaccess` on Apache.
@@ -50,4 +50,4 @@ npm run serve                     # http://127.0.0.1:4326/
   - every commit passes the tests;
   - a bug fix comes with its regression test in the same commit.
 - **Git:** do not commit, push or create branches unless asked to.
-- **Deployment:** the contents of `public/` are copied to the web host, which runs PHP 8.5.
+- **Deployment:** a push to `main` runs the tests, then `.github/workflows/deploy.yml` publishes the contents of `public/`, exactly as they are, for the web host, which runs PHP 8.5. Its publish job holds a key that can write to other sites, so it must never run code from this repository. The name of the target repository stays out of this public repository and its logs, in the `DEPLOY_REPOSITORY` secret.

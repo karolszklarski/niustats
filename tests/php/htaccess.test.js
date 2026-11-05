@@ -50,6 +50,8 @@ before(async () => {
       "sed -i '/%{HTTPS}/d' /var/www/html/.htaccess",
       'mkdir /var/www/html/unchanged',
       'cp -r /site/. /var/www/html/unchanged/',
+      'mkdir /var/www/html/.git',
+      'echo secret > /var/www/html/.git/config',
       'exec apache2-foreground',
     ].join(' && '),
   );
@@ -97,6 +99,14 @@ test('answers 304 for a file that has not changed', async () => {
 
 test('does not list the files of a directory', async () => {
   assert.equal((await send('/js/')).status, 403);
+});
+
+test('hides .git, which is in the site directory when the host deploys through Git', async () => {
+  for (const path of ['/.git', '/.git/', '/.git/config']) {
+    const { status, text } = await send(path);
+    assert.equal(status, 404, path);
+    assert.doesNotMatch(text, /secret/, path);
+  }
 });
 
 test('runs track.php', async () => {
