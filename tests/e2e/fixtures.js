@@ -1,21 +1,5 @@
 // Shared test setup. No test talks to a real server, and an uncaught error in the page fails the test.
 import { test as base, expect } from '@playwright/test';
-import { fileURLToPath } from 'node:url';
-
-const nodeModule = (path) => fileURLToPath(new URL(`../../node_modules/${path}`, import.meta.url));
-
-// The pages load these files from CDNs. The tests serve the same versions from the npm packages
-// pinned in package.json, so they run offline and do not change when a CDN does.
-const cdnFiles = new Map([
-  [
-    'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css',
-    { path: nodeModule('bootstrap/dist/css/bootstrap.min.css'), contentType: 'text/css' },
-  ],
-  [
-    'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js',
-    { path: nodeModule('bootstrap/dist/js/bootstrap.bundle.min.js'), contentType: 'text/javascript' },
-  ],
-]);
 
 export const test = base.extend({
   page: async ({ page, baseURL }, use) => {
@@ -25,8 +9,6 @@ export const test = base.extend({
     await page.context().route('**/*', (route) => {
       const url = route.request().url();
       if (url.startsWith(baseURL)) return route.continue();
-      const file = cdnFiles.get(url);
-      if (file) return route.fulfill({ ...file, headers: { 'access-control-allow-origin': '*' } });
       // Anything else, Google Analytics included, never leaves the test.
       return route.abort('blockedbyclient');
     });

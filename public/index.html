@@ -1,21 +1,14 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WDN0Q9FRX8"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() {dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-WDN0Q9FRX8');
-    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="canonical" href="https://niustats.com">
     <title>Niu Stats – battery range stats for Niu electric scooters</title>
     <meta name="description" content="See how the range of your Niu electric scooter changes month by month. Sign in with your Niu app account to chart your own trips, or download them as CSV.">
     <link href="favicon.ico" rel="icon" type="image/x-icon">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link href="vendor/bootstrap.min.css" rel="stylesheet">
+    <link href="vendor/cookieconsent.css" rel="stylesheet">
     <style>
         canvas {
             max-height: 50vh;
@@ -40,7 +33,9 @@
             <button type="button" class="btn btn-danger btn-sm" id="remove-data">Delete your data</button>
         </div>
         <div class="card-footer text-body-secondary">
-            <a class="text-muted" href="https://github.com/karolszklarski/niustats">GitHub</a>
+            <a class="text-muted me-3" href="https://github.com/karolszklarski/niustats">GitHub</a>
+            <a class="text-muted me-3" href="privacy.html">Privacy policy</a>
+            <button type="button" class="btn btn-link text-muted p-0 align-baseline" data-cc="show-preferencesModal">Cookie settings</button>
         </div>
     </div>
 
@@ -57,10 +52,8 @@
     </div>
 </template>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-        crossorigin="anonymous"></script>
 <script src="vendor/chart.umd.min.js"></script>
 <script type="module" src="js/index.js"></script>
+<script type="module" src="js/consent.js"></script>
 </body>
 </html>

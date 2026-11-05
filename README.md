@@ -7,6 +7,7 @@ Sign in with your Niu app account. The site downloads your trips and charts, mon
 ## Disclaimers
 
 - Your credentials are not stored anywhere. Your data (vehicles, trips) is stored only in your web browser.
+- Google Analytics runs only if you accept it in the cookie banner. Until then, a page contacts no other server, except Niu when you sign in. The [privacy policy](https://niustats.com/privacy.html) has the details.
 - The website is not affiliated with Niu in any way. It is the result of reverse engineering the Niu mobile app. It may give wrong results or stop working at any time.
 
 ## How it works
@@ -43,7 +44,7 @@ npm run serve                     # local preview at http://127.0.0.1:4326/
 
 `npm run serve` serves `public/` as static files. `track.php` needs PHP, so downloading data from Niu works only on a PHP host.
 
-The tests never contact real servers. The Niu API is stubbed in each test, and the files the pages load from CDNs come from the same versions installed from npm. `track.php` is tested on PHP 8.5 in Docker, the version the site runs on, against a stub of the Niu API in the same container, and `.htaccess` on Apache with the same PHP version.
+The tests never contact real servers. The Niu API is stubbed in each test, and any other external request is blocked. `track.php` is tested on PHP 8.5 in Docker, the version the site runs on, against a stub of the Niu API in the same container, and `.htaccess` on Apache with the same PHP version.
 
 ## License
 

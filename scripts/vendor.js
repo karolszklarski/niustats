@@ -11,6 +11,11 @@ export const vendorFiles = {
   'chart.js-LICENSE.md': 'chart.js/LICENSE.md',
   'md5.min.js': 'blueimp-md5/js/md5.min.js',
   'blueimp-md5-LICENSE.txt': 'blueimp-md5/LICENSE.txt',
+  'bootstrap.min.css': 'bootstrap/dist/css/bootstrap.min.css',
+  'bootstrap-LICENSE.txt': 'bootstrap/LICENSE',
+  'cookieconsent.esm.js': 'vanilla-cookieconsent/dist/cookieconsent.esm.js',
+  'cookieconsent.css': 'vanilla-cookieconsent/dist/cookieconsent.css',
+  'cookieconsent-LICENSE.txt': 'vanilla-cookieconsent/LICENSE',
 };
 
 export const vendorPath = (name = '') => fileURLToPath(new URL(`../public/vendor/${name}`, import.meta.url));

@@ -49,6 +49,7 @@ test.describe('without JavaScript', () => {
     await expect(page.getByText('Sign in with your Niu app account')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Load your data', exact: true })).toHaveAttribute('href', 'pull.html');
     await expect(page.getByRole('link', { name: 'GitHub' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Privacy policy' })).toHaveAttribute('href', 'privacy.html');
   });
 });
 
@@ -136,6 +137,20 @@ test('loads Chart.js from this site, not from a CDN', async ({ page, baseURL }) 
 
   expect(scripts.filter((url) => /chart/i.test(url))).toEqual([`${baseURL}/vendor/chart.umd.min.js`]);
   expect(await readCharts(page, EXAMPLE_SN)).toBeTruthy();
+});
+
+test('loads Bootstrap from this site, not from a CDN', async ({ page, baseURL }) => {
+  const requests = [];
+  page.on('request', (request) => {
+    if (/bootstrap/i.test(request.url())) requests.push(request.url());
+  });
+  await page.goto('/');
+
+  expect(requests).toEqual([`${baseURL}/vendor/bootstrap.min.css`]);
+  await expect(page.getByRole('button', { name: 'Load your data', exact: true })).toHaveCSS(
+    'background-color',
+    'rgb(13, 110, 253)',
+  );
 });
 
 test('shows scooter names as text, not as HTML', async ({ page }) => {
