@@ -267,7 +267,7 @@ test('sums up the example scooter', () => {
   assert.equal(estimate.from, '202301');
   assert.equal(estimate.to, '202312');
   assert.equal(estimate.latestYear, true);
-  assert.equal(Math.round(best.range), 55);
+  assert.equal(Math.round(best.range), 56);
   assert.equal(Math.round(lowest.range), 37);
   assert.equal(months.length, 55);
   assert.ok(months.every(({ reliable }) => reliable));

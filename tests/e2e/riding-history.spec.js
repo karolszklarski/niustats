@@ -297,8 +297,9 @@ test.describe('readings that make no sense', () => {
   for (const width of [1440, 320]) {
     test(`fits a huge distance at ${width} px, with shortened numbers on the axis`, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 });
-      // 12 080 km in February, of which the range is about 6600 km.
-      await show(page, [...monthOfTrips(202401), trip(20240205, 12000000, 5), ...monthOfTrips(202402), ...monthOfTrips(202403)]);
+      // Every trip reads the same, so nothing shows that it is faulty: 12 000 km a month, and a range of 180 000 km.
+      const huge = (month) => monthOfTrips(month, 3, 4000000, 2);
+      await show(page, [...huge(202401), ...huge(202402), ...huge(202403)]);
       await distanceSwitch(page, 'range').check();
       await expect.poll(() => overflow(page)).toBe(0);
 
@@ -314,7 +315,7 @@ test.describe('readings that make no sense', () => {
         }),
       );
       expect(axes.map(({ fits }) => fits)).toEqual([true, true]);
-      expect(axes[1].labels.some((label) => /K$/.test(label))).toBe(true);
+      expect(axes.map(({ labels }) => labels.some((label) => /K$/.test(label)))).toEqual([true, true]);
     });
   }
 });

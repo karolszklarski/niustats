@@ -55,7 +55,7 @@ test('sums up the example scooter', async ({ page }) => {
   expect(example.note).toBe('From 100% to 10% battery, Jan 2023 – Dec 2023');
   expect(example.gauge).toEqual(['30% at 33 km', '20% at 38 km', '10% at 42 km']);
   expect(example.gaugeBars).toBe(1);
-  expect(example.records).toEqual(['55 km', '37 km']);
+  expect(example.records).toEqual(['56 km', '37 km']);
   expect(example.recordMonths).toEqual(['Jun 2019', 'Dec 2022']);
   expect(example.notes).toEqual([]);
 });
@@ -370,7 +370,7 @@ test('names a scooter by what is known about it', async ({ page }) => {
   expect(await page.evaluate(() => /undefined|NaN|Infinity/.test(document.body.innerText))).toBe(false);
 });
 
-test('leaves out the 2% of trips with the highest battery use per km', async ({ page }) => {
+test('leaves out a trip that used far more battery than its distance should take', async ({ page }) => {
   await storeItems(page, {
     vehicles: { SN1: vehicles.SN1 },
     trips: { SN1: [...januaryTrips(49, 10000, 20), trip(20240131, 1000, 50)] },
@@ -380,7 +380,17 @@ test('leaves out the 2% of trips with the highest battery use per km', async ({ 
   expect((await readScooters(page))[0].rows).toEqual([['Jan 2024', '45.0', '2.00', '490']]);
 });
 
-test('keeps trips of up to 5% per km when there are fewer than 50', async ({ page }) => {
+test('leaves out a long trip that shows hardly any battery use', async ({ page }) => {
+  await storeItems(page, {
+    vehicles: { SN1: vehicles.SN1 },
+    trips: { SN1: [...januaryTrips(48, 10000, 20), trip(20240131, 80000, 17)] },
+  });
+  await page.goto('/');
+
+  expect((await readScooters(page))[0].rows).toEqual([['Jan 2024', '45.0', '2.00', '480']]);
+});
+
+test('keeps a trip that used somewhat more battery than usual', async ({ page }) => {
   await storeItems(page, {
     vehicles: { SN1: vehicles.SN1 },
     trips: { SN1: [...januaryTrips(48, 10000, 20), trip(20240131, 1000, 5)] },
@@ -391,14 +401,15 @@ test('keeps trips of up to 5% per km when there are fewer than 50', async ({ pag
   expect((await readScooters(page))[0].rows).toEqual([['Jan 2024', '44.9', '2.01', '481']]);
 });
 
-test('leaves out trips above 5% per km when there are fewer than 50', async ({ page }) => {
+test('judges a scooter by its own battery use, however high', async ({ page }) => {
   await storeItems(page, {
     vehicles: { SN1: vehicles.SN1 },
-    trips: { SN1: [...januaryTrips(48, 10000, 20), trip(20240131, 1000, 50)] },
+    trips: { SN1: januaryTrips(30, 3000, 18) },
   });
   await page.goto('/');
 
-  expect((await readScooters(page))[0].rows).toEqual([['Jan 2024', '45.0', '2.00', '480']]);
+  // 6 points per km, so 90 points take 15 km.
+  expect((await readScooters(page))[0].rows).toEqual([['Jan 2024', '15.0', '6.00', '90']]);
 });
 
 test('offers to delete the data only when there is some', async ({ page }) => {
