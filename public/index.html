@@ -13,18 +13,24 @@
 <body>
 
 <header class="rail">
-    <h1 class="brand">
-        <svg class="brand-mark" viewBox="0 0 34 16" aria-hidden="true">
-            <rect class="mark-shell" x="0.75" y="0.75" width="29.5" height="14.5" rx="2.5"/>
-            <rect class="mark-nub" x="31.5" y="5" width="2.5" height="6" rx="1"/>
-            <rect class="mark-1" x="3" y="3" width="14" height="10" rx="1"/>
-            <rect class="mark-2" x="18.5" y="3" width="3.5" height="10" rx="1"/>
-            <rect class="mark-3" x="23.5" y="3" width="3.5" height="10" rx="1"/>
-        </svg>
-        <span class="brand-name">Niu Stats</span>
-        <span class="visually-hidden"> – </span>
-        <span class="brand-tag">battery range stats for Niu electric scooters</span>
-    </h1>
+    <div class="brand-row">
+        <h1 class="brand">
+            <svg class="brand-mark" viewBox="0 0 34 16" aria-hidden="true">
+                <rect class="mark-shell" x="0.75" y="0.75" width="29.5" height="14.5" rx="2.5"/>
+                <rect class="mark-nub" x="31.5" y="5" width="2.5" height="6" rx="1"/>
+                <rect class="mark-1" x="3" y="3" width="14" height="10" rx="1"/>
+                <rect class="mark-2" x="18.5" y="3" width="3.5" height="10" rx="1"/>
+                <rect class="mark-3" x="23.5" y="3" width="3.5" height="10" rx="1"/>
+            </svg>
+            <span class="brand-name">Niu Stats</span>
+            <span class="visually-hidden"> – </span>
+            <span class="brand-tag">battery range stats for Niu electric scooters</span>
+        </h1>
+        <div class="units" role="group" aria-label="Distance units">
+            <button type="button" data-units="km" aria-pressed="true">km</button>
+            <button type="button" data-units="mi" aria-pressed="false">mi</button>
+        </div>
+    </div>
     <div class="intro">
         <h2>See how far your Niu scooter goes on a charge</h2>
         <p>
@@ -35,13 +41,12 @@
         <div class="actions">
             <a class="btn btn-primary" href="pull.html">Load your data</a>
             <a class="btn" href="data.html">View trips as CSV</a>
-            <button type="button" class="btn" id="change-units">Change units</button>
-            <button type="button" class="btn btn-danger" id="remove-data">Delete your data</button>
+            <button type="button" class="btn btn-danger" id="remove-data" hidden>Delete your data</button>
         </div>
     </div>
 </header>
 
-<main id="charts"></main>
+<main id="scooters"></main>
 
 <footer class="links">
     <a href="https://github.com/karolszklarski/niustats">GitHub</a>
@@ -49,11 +54,76 @@
     <button type="button" data-cc="show-preferencesModal">Cookie settings</button>
 </footer>
 
-<template id="chart-card">
-    <section class="chart">
-        <p class="chart-scooter"><b class="scooter-name"></b><span class="scooter-details"></span></p>
-        <h3 class="chart-title"></h3>
-        <div class="plot"><canvas></canvas></div>
+<template id="scooter">
+    <section class="scooter">
+        <header class="scooter-head">
+            <h3 class="scooter-name"></h3>
+            <p class="scooter-details"></p>
+        </header>
+        <p class="scooter-empty" hidden>No trips recorded for this scooter yet.</p>
+        <div class="scooter-body">
+            <div class="stats">
+                <div class="stat stat-hero">
+                    <p class="stat-label" data-stat="range-label"></p>
+                    <p class="stat-wait">Not enough trips yet. The estimate appears after about <span data-stat="minimum"></span> of riding.</p>
+                    <p class="stat-value"><span class="approx">~</span><span class="num" data-stat="range"></span> <span class="unit"></span></p>
+                    <p class="stat-note" data-stat="range-note"></p>
+                    <p class="stat-caution">Rough estimate: based on only <span data-stat="rough-distance"></span> so far.</p>
+                    <div class="gauge-bar" aria-hidden="true"><span class="g1"></span><span class="g2"></span><span class="g3"></span></div>
+                    <ul class="gauge-marks">
+                        <li><i class="key g1"></i>30% at <b data-stat="at30"></b></li>
+                        <li><i class="key g2"></i>20% at <b data-stat="at20"></b></li>
+                        <li><i class="key g3"></i>10% at <b data-stat="at10"></b></li>
+                    </ul>
+                </div>
+                <div class="stat" data-extreme>
+                    <p class="stat-label">Best month</p>
+                    <p class="stat-value"><span class="num" data-stat="best"></span> <span class="unit"></span></p>
+                    <p class="stat-note" data-stat="best-note"></p>
+                </div>
+                <div class="stat" data-extreme>
+                    <p class="stat-label">Lowest month</p>
+                    <p class="stat-value"><span class="num" data-stat="lowest"></span> <span class="unit"></span></p>
+                    <p class="stat-note" data-stat="lowest-note"></p>
+                </div>
+            </div>
+            <p class="scooter-note" data-note="charts-wait" hidden>Monthly charts appear once two months each have at least <span data-stat="minimum"></span> ridden.</p>
+            <p class="scooter-note" data-note="months-left-out" hidden>Months with under <span data-stat="minimum"></span> ridden aren't charted, because that's too little for a reliable figure.</p>
+            <figure class="chart" data-chart="range">
+                <figcaption class="chart-head">
+                    <h4 class="chart-title"></h4>
+                    <label class="switch"><input type="checkbox"><span>Show distance ridden</span></label>
+                    <ul class="legend"></ul>
+                </figcaption>
+                <div class="plot"><canvas role="img"></canvas></div>
+                <div class="strip" hidden>
+                    <p class="strip-title"></p>
+                    <div class="strip-plot"><canvas role="img"></canvas></div>
+                </div>
+            </figure>
+            <figure class="chart" data-chart="battery">
+                <figcaption class="chart-head">
+                    <h4 class="chart-title"></h4>
+                    <label class="switch"><input type="checkbox"><span>Show distance ridden</span></label>
+                    <ul class="legend"></ul>
+                </figcaption>
+                <div class="plot"><canvas role="img"></canvas></div>
+                <div class="strip" hidden>
+                    <p class="strip-title"></p>
+                    <div class="strip-plot"><canvas role="img"></canvas></div>
+                </div>
+            </figure>
+            <details class="twin">
+                <summary>Monthly numbers</summary>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th scope="col">Month</th><th scope="col"></th><th scope="col"></th><th scope="col"></th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                    <p class="twin-note" data-note="table-dash" hidden>– means under <span data-stat="minimum"></span> ridden that month.</p>
+                </div>
+            </details>
+        </div>
     </section>
 </template>
 

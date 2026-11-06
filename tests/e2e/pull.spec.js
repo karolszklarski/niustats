@@ -115,8 +115,8 @@ test('downloads scooters and trips into the browser', async ({ page }) => {
     },
     vehicles: { SN1: scooters[0], SN2: scooters[1] },
   });
-  await expect(page.locator('.chart-scooter', { hasText: 'Blue - NQi GTS - SN1' })).toHaveCount(4);
-  await expect(page.locator('.chart-scooter', { hasText: 'Red - MQi+ - SN2' })).toHaveCount(4);
+  await expect(page.locator('.scooter-name')).toHaveText(['Blue', 'Red']);
+  await expect(page.locator('.scooter-details')).toHaveText(['NQi GTS · SN1', 'MQi+ · SN2']);
 });
 
 test('keeps one copy of a trip that Niu lists on two pages', async ({ page }) => {

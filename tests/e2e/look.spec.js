@@ -1,8 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { test, expect, readCharts } from './fixtures.js';
+import { test, expect, monthOfTrips, readCharts, storeItems } from './fixtures.js';
 
-const EXAMPLE_SN = 'NAYL2AX2681A4DSQ';
-const PAGES = ['/', '/pull.html', '/privacy.html', '/data.html'];
+const PAGES =['/', '/pull.html', '/privacy.html', '/data.html'];
 const PAGES_WITH_FRAME = ['/', '/pull.html', '/privacy.html'];
 const WIDTHS = [1440, 1100, 1099, 920, 768, 640, 639, 390, 320];
 
@@ -130,6 +129,72 @@ test('stacks the rail above the content below 1100 px', async ({ page }) => {
   expect(main.y).toBe(rail.height);
 });
 
+test.describe('the figures at the top', () => {
+  for (const width of [1440, 640, 639, 390, 320]) {
+    test(`set the main figure apart from the other two at ${width} px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto('/');
+      await readCharts(page);
+
+      const main = await page.locator('.stat-hero').boundingBox();
+      const [best, lowest] = await Promise.all(
+        [0, 1].map((tile) => page.locator('[data-extreme]').nth(tile).boundingBox()),
+      );
+      if (width >= 640) {
+        // Side by side: the other two stacked on the right, half as wide and together as tall as the main figure.
+        expect(main.width / best.width).toBeCloseTo(2, 1);
+        expect(best.x).toBeGreaterThan(main.x + main.width - 1);
+        expect(lowest.x).toBe(best.x);
+        expect(lowest.y).toBeGreaterThan(best.y);
+        expect(lowest.y + lowest.height).toBeCloseTo(main.y + main.height, 0);
+      } else {
+        // The main figure on its own row, the other two side by side below it.
+        expect(best.y).toBeGreaterThan(main.y + main.height - 1);
+        expect(lowest.y).toBe(best.y);
+        expect(lowest.x).toBeGreaterThan(best.x);
+      }
+      expect(await overflow(page)).toBe(0);
+    });
+  }
+
+  test('fit a long scooter name without sticking out', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 700 });
+    await storeItems(page, {
+      vehicles: { SN1: { scooter_name: 'A'.repeat(80), sku_name: 'B'.repeat(80) } },
+      trips: { SN1: monthOfTrips(202401) },
+    });
+    await page.goto('/');
+    await readCharts(page);
+
+    await expect.poll(() => overflow(page)).toBe(0);
+    const name = await page.locator('.scooter-name').boundingBox();
+    expect(name.x + name.width).toBeLessThanOrEqual(320);
+  });
+});
+
+test.describe('the units', () => {
+  test('sit beside the name of the site, and show the chosen one', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 700 });
+    await page.goto('/');
+    const units = await page.locator('.units').boundingBox();
+    const name = await page.locator('.brand').boundingBox();
+    expect(units.x).toBeGreaterThanOrEqual(name.x + name.width);
+    expect(units.x + units.width).toBeLessThanOrEqual(320);
+
+    const chosen = page.getByRole('button', { name: 'km', exact: true });
+    const other = page.getByRole('button', { name: 'mi', exact: true });
+    expect(await cssOf(chosen, 'backgroundColor')).not.toBe(await cssOf(other, 'backgroundColor'));
+  });
+
+  test('are large enough to tap', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.goto('/');
+    const button = await page.getByRole('button', { name: 'km', exact: true }).boundingBox();
+    expect(button.width).toBeGreaterThanOrEqual(44);
+    expect(button.height).toBeGreaterThanOrEqual(36);
+  });
+});
+
 test('keeps the footer readable over the rail on a low wide screen', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 420 });
   await page.goto('/');
@@ -144,7 +209,7 @@ test.describe('the charts', () => {
     });
     // Not until "load", which waits for the font itself, whatever the page does.
     await page.goto('/', { waitUntil: 'domcontentloaded' });
-    await page.waitForFunction((id) => Chart.getChart(id), `rangeChart${EXAMPLE_SN}`);
+    await page.waitForFunction(() => Chart.getChart(document.querySelector('.plot canvas')));
 
     expect(await page.evaluate(() => document.fonts.check('12px Saira'))).toBe(true);
     expect(await page.evaluate(() => Chart.defaults.font.family)).toMatch(/^'Saira'/);
@@ -154,35 +219,79 @@ test.describe('the charts', () => {
     await page.route('**/*.woff2', (route) => route.abort());
     await page.goto('/');
 
-    expect(await readCharts(page, EXAMPLE_SN)).toBeTruthy();
+    expect((await readCharts(page)).range).toBeTruthy();
   });
 
   test('change colours with the mode, without a reload', async ({ page }) => {
     const colors = () =>
-      page.evaluate((sn) => {
-        const chart = Chart.getChart(`rangeChart${sn}`);
+      page.evaluate(() => {
+        const chart = Chart.getChart(document.querySelector('[data-chart="range"] .plot canvas'));
+        const line = Chart.getChart(document.querySelector('[data-chart="battery"] .plot canvas'));
         return {
           bands: chart.data.datasets.map(({ backgroundColor }) => backgroundColor),
+          battery: line.data.datasets[0].borderColor,
           text: Chart.defaults.color,
           grid: chart.options.scales.y.grid.color,
+          tooltip: chart.options.plugins.tooltip.backgroundColor,
         };
-      }, EXAMPLE_SN);
+      });
 
     await page.emulateMedia({ colorScheme: 'light' });
     await page.goto('/');
-    await readCharts(page, EXAMPLE_SN);
-    expect(await colors()).toEqual({ bands: ['#0e8c7d', '#c98a06', '#d4483a'], text: '#58656f', grid: '#e3e8eb' });
+    await readCharts(page);
+    expect(await colors()).toEqual({
+      bands: ['#0e8c7d', '#c98a06', '#d4483a'],
+      battery: '#2c66c9',
+      text: '#58656f',
+      grid: '#e3e8eb',
+      tooltip: '#10171c',
+    });
 
     await page.emulateMedia({ colorScheme: 'dark' });
-    await expect.poll(colors).toEqual({ bands: ['#16a394', '#bd8c15', '#c8402f'], text: '#8d99a3', grid: '#222a31' });
-    await expect(page.locator('.chart')).toHaveCount(4);
-    expect(await readCharts(page, EXAMPLE_SN)).toBeTruthy();
+    await expect.poll(colors).toEqual({
+      bands: ['#16a394', '#bd8c15', '#c8402f'],
+      battery: '#5b8def',
+      text: '#8d99a3',
+      grid: '#222a31',
+      tooltip: '#eef2f5',
+    });
+    await expect(page.locator('.chart')).toHaveCount(2);
+    expect((await readCharts(page)).range).toBeTruthy();
+  });
+
+  test('do not animate for a visitor who asks for less motion', async ({ page }) => {
+    const animation = () =>
+      page.evaluate(() => Chart.getChart(document.querySelector('.plot canvas')).options.animation);
+
+    await page.goto('/');
+    await readCharts(page);
+    expect(await animation()).toMatchObject({ duration: 300 });
+
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.reload();
+    await readCharts(page);
+    expect(await animation()).toBe(false);
+  });
+
+  test('describe themselves to screen readers', async ({ page }) => {
+    await page.goto('/');
+    await readCharts(page);
+
+    await expect(page.locator('[data-chart="range"] .plot canvas')).toHaveAttribute(
+      'aria-label',
+      'Stacked bars of the range in km for each month, Jun 2019 to Dec 2023. The values are in the monthly numbers table.',
+    );
+    await expect(page.locator('[data-chart="battery"] .plot canvas')).toHaveAttribute(
+      'aria-label',
+      'Line of the battery percent used per km for each month, Jun 2019 to Dec 2023. The values are in the monthly numbers table.',
+    );
+    await expect(page.locator('[data-chart="range"] .plot canvas')).toHaveAttribute('role', 'img');
   });
 
   test('fit a narrow screen', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 700 });
     await page.goto('/');
-    await readCharts(page, EXAMPLE_SN);
+    await readCharts(page);
 
     expect(await overflow(page)).toBe(0);
     const panel = await page.locator('.chart').first().boundingBox();

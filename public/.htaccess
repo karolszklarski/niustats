@@ -1,6 +1,6 @@
 Options -MultiViews -Indexes
 
-# When the host deploys through Git, .git sits in the site directory.
+# A copy of the site made by hand from a Git checkout could bring .git along.
 RedirectMatch 404 (^|/)\.git(/|$)
 
 <IfModule mod_headers.c>

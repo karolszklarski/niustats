@@ -29,6 +29,20 @@ For each trip Niu reports the distance and the battery used, in percentage point
 
 The same statistics are available in miles.
 
+The home page sums them up for each scooter:
+
+- **Range on a charge:** from 100% down to 10%, from the battery used over the distance ridden in the latest 12 months, counted back from the last trip. If those months hold under 50 km, as after a long break, it comes from all trips.
+- **Best and lowest month:** the months with the longest and the shortest range in the whole history.
+- **Charts and table:** every month from the first trip to the last, so that a break in riding stays visible.
+
+Niu reports battery use in whole percents, so a short distance says little. On the example scooter, without the months of faulty readings, the range of consecutive trips came within 20% of the range of the whole month in 80% of cases over 10 km, 95% over 20 km and 98% over 50 km. That is one scooter and one rider, so these are rough limits. With little riding the page says less, rather than show a figure it can't back up:
+
+- Below 20 km there is no range, and from 20 to 50 km it is marked as a rough estimate.
+- The best and the lowest month count only months of at least 50 km, and take at least two of them.
+- A month under 20 km is a gap in the charts and a dash in the table. The charts take at least two months of 20 km.
+
+The limits convert exactly to miles, so changing units changes the figures but not what is shown.
+
 ## Development
 
 The site in `public/` is plain HTML, JavaScript modules and PHP, with no build step: the files are served exactly as they are in the repository. The page scripts and the modules they share are in `public/js/`, and the styles in `public/css/site.css`. The libraries and the font the pages use are served from `public/vendor/`, copied from the npm packages pinned in `package.json` with `npm run vendor`.

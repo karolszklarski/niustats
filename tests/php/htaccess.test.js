@@ -101,7 +101,7 @@ test('does not list the files of a directory', async () => {
   assert.equal((await send('/js/')).status, 403);
 });
 
-test('hides .git, which is in the site directory when the host deploys through Git', async () => {
+test('hides .git, which a copy of the site made by hand could bring along', async () => {
   for (const path of ['/.git', '/.git/', '/.git/config']) {
     const { status, text } = await send(path);
     assert.equal(status, 404, path);

@@ -1,7 +1,7 @@
 name: Deploy
 
 # A push to main runs the tests, then publishes public/ to this site's branch in a private repository with the
-# ready files of several sites, from which the web host deploys them.
+# ready files of several sites, from which a separate script uploads them to the web host.
 #
 # DEPLOY_REPOSITORY names that repository, as owner/name. It is a secret rather than a variable because the logs
 # of a public repository show the values of variables.
@@ -54,7 +54,8 @@ jobs:
           echo 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > "$RUNNER_TEMP/known_hosts"
           export GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o UserKnownHostsFile=$RUNNER_TEMP/known_hosts"
 
-          # Each deployment is a new commit on top of the branch, with no force push, so the host can simply pull it.
+          # Each deployment is a new commit on top of the branch, with no force push, so the script that uploads the
+          # files can compare it with the commit it uploaded last.
           work="$RUNNER_TEMP/site"
           if [ -n "$(git ls-remote --heads "$remote" "$BRANCH")" ]; then
             git clone --quiet --branch "$BRANCH" --single-branch --depth 1 "$remote" "$work"
