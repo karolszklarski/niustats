@@ -18,8 +18,8 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@fontsource-variable/saira": "5.3.0",
     "blueimp-md5": "2.19.0",
-    "bootstrap": "5.3.2",
     "chart.js": "4.5.1",
     "vanilla-cookieconsent": "3.1.0"
   },

@@ -7,20 +7,32 @@
     <title>Load your data – Niu Stats</title>
     <meta name="description" content="Sign in with your Niu app account to load your trips. Your password isn't stored, and your trips are saved only in your browser.">
     <link href="favicon.ico" rel="icon" type="image/x-icon">
-    <link href="vendor/bootstrap.min.css" rel="stylesheet">
     <link href="vendor/cookieconsent.css" rel="stylesheet">
+    <link href="css/site.css" rel="stylesheet">
 </head>
-<body>
+<body class="page-pull">
 
-<div class="container">
-    <div class="card mt-3 mb-3">
-        <h3 class="card-header">Niu Stats – battery range stats for Niu electric scooters</h3>
-        <div class="card-body">
-            <h5 class="card-title">Load your data</h5>
-            <p class="card-text">
-                Sign in with the phone number or email and password you use in the Niu app.
-            </p>
-            Before you sign in (more in the <a href="privacy.html">privacy policy</a>):
+<header class="rail">
+    <a class="brand" href=".">
+        <svg class="brand-mark" viewBox="0 0 34 16" aria-hidden="true">
+            <rect class="mark-shell" x="0.75" y="0.75" width="29.5" height="14.5" rx="2.5"/>
+            <rect class="mark-nub" x="31.5" y="5" width="2.5" height="6" rx="1"/>
+            <rect class="mark-1" x="3" y="3" width="14" height="10" rx="1"/>
+            <rect class="mark-2" x="18.5" y="3" width="3.5" height="10" rx="1"/>
+            <rect class="mark-3" x="23.5" y="3" width="3.5" height="10" rx="1"/>
+        </svg>
+        <span class="brand-name">Niu Stats</span>
+        <span class="visually-hidden"> – </span>
+        <span class="brand-tag">battery range stats for Niu electric scooters</span>
+    </a>
+</header>
+
+<main>
+    <h1 class="page-title">Load your data</h1>
+    <p class="page-lead">Sign in with the phone number or email and password you use in the Niu app.</p>
+    <div class="pull-grid">
+        <section class="panel pull-notes">
+            <p>Before you sign in (more in the <a href="privacy.html">privacy policy</a>):</p>
             <ol>
                 <li>
                     Your login and password go straight to Niu and aren't stored anywhere.
@@ -35,31 +47,31 @@
                     It was built by reverse engineering the Niu mobile app, so it may give wrong results or stop working at any time.
                 </li>
             </ol>
-            <div class="mb-3">
-                <label for="login" class="form-label">Phone number or email</label>
-                <input name="login" type="text" class="form-control" id="login" autocomplete="username"
+        </section>
+        <section class="panel">
+            <div class="field">
+                <label for="login">Phone number or email</label>
+                <input name="login" type="text" id="login" autocomplete="username"
                        autocapitalize="none" autocorrect="off" spellcheck="false">
             </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input name="password" type="password" class="form-control" id="password"
-                       autocomplete="current-password">
+            <div class="field">
+                <label for="password">Password</label>
+                <input name="password" type="password" id="password" autocomplete="current-password">
             </div>
-            <div class="mb-3">
-                <button type="submit" class="btn btn-primary" id="gatherButton">Sign in and load your data</button>
+            <button type="submit" class="btn btn-primary btn-wide" id="gatherButton">Sign in and load your data</button>
+            <div class="field" id="logsDiv" hidden>
+                <label for="logs">Progress</label>
+                <textarea id="logs" rows="10" readonly></textarea>
             </div>
-            <div class="mb-3" id="logsDiv" hidden>
-                <label for="logs" class="form-label">Progress</label>
-                <textarea class="form-control" id="logs" rows="10" readonly></textarea>
-            </div>
-        </div>
-        <div class="card-footer text-body-secondary">
-            <a class="text-muted me-3" href="https://github.com/karolszklarski/niustats">GitHub</a>
-            <a class="text-muted me-3" href="privacy.html">Privacy policy</a>
-            <button type="button" class="btn btn-link text-muted p-0 align-baseline" data-cc="show-preferencesModal">Cookie settings</button>
-        </div>
+        </section>
     </div>
-</div>
+</main>
+
+<footer class="links">
+    <a href="https://github.com/karolszklarski/niustats">GitHub</a>
+    <a href="privacy.html">Privacy policy</a>
+    <button type="button" data-cc="show-preferencesModal">Cookie settings</button>
+</footer>
 
 <script src="vendor/md5.min.js"></script>
 <script type="module" src="js/pull.js"></script>

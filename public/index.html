@@ -7,49 +7,54 @@
     <title>Niu Stats – battery range stats for Niu electric scooters</title>
     <meta name="description" content="See how the range of your Niu electric scooter changes month by month. Sign in with your Niu app account to chart your own trips, or download them as CSV.">
     <link href="favicon.ico" rel="icon" type="image/x-icon">
-    <link href="vendor/bootstrap.min.css" rel="stylesheet">
     <link href="vendor/cookieconsent.css" rel="stylesheet">
-    <style>
-        canvas {
-            max-height: 50vh;
-        }
-    </style>
+    <link href="css/site.css" rel="stylesheet">
 </head>
 <body>
 
-<div class="container">
-    <div class="card mt-3 mb-3">
-        <h3 class="card-header">Niu Stats – battery range stats for Niu electric scooters</h3>
-        <div class="card-body">
-            <h5 class="card-title">See how far your Niu scooter goes on a charge</h5>
-            <p class="card-text">
-                Sign in with your Niu app account to load your trips.
-                You can then see them charted month by month, or download them and work with them yourself.
-                <span id="example-note">Until then, the charts below show an example scooter.</span>
-            </p>
-            <a class="btn btn-primary btn-sm" href="pull.html" role="button">Load your data</a>
-            <a class="btn btn-warning btn-sm" href="data.html" role="button">View trips as CSV</a>
-            <button type="button" class="btn btn-warning btn-sm" id="change-units">Change units</button>
-            <button type="button" class="btn btn-danger btn-sm" id="remove-data">Delete your data</button>
-        </div>
-        <div class="card-footer text-body-secondary">
-            <a class="text-muted me-3" href="https://github.com/karolszklarski/niustats">GitHub</a>
-            <a class="text-muted me-3" href="privacy.html">Privacy policy</a>
-            <button type="button" class="btn btn-link text-muted p-0 align-baseline" data-cc="show-preferencesModal">Cookie settings</button>
+<header class="rail">
+    <h1 class="brand">
+        <svg class="brand-mark" viewBox="0 0 34 16" aria-hidden="true">
+            <rect class="mark-shell" x="0.75" y="0.75" width="29.5" height="14.5" rx="2.5"/>
+            <rect class="mark-nub" x="31.5" y="5" width="2.5" height="6" rx="1"/>
+            <rect class="mark-1" x="3" y="3" width="14" height="10" rx="1"/>
+            <rect class="mark-2" x="18.5" y="3" width="3.5" height="10" rx="1"/>
+            <rect class="mark-3" x="23.5" y="3" width="3.5" height="10" rx="1"/>
+        </svg>
+        <span class="brand-name">Niu Stats</span>
+        <span class="visually-hidden"> – </span>
+        <span class="brand-tag">battery range stats for Niu electric scooters</span>
+    </h1>
+    <div class="intro">
+        <h2>See how far your Niu scooter goes on a charge</h2>
+        <p>
+            Sign in with your Niu app account to load your trips.
+            You can then see them charted month by month, or download them and work with them yourself.
+            <span id="example-note">Until then, the charts below show an example scooter.</span>
+        </p>
+        <div class="actions">
+            <a class="btn btn-primary" href="pull.html">Load your data</a>
+            <a class="btn" href="data.html">View trips as CSV</a>
+            <button type="button" class="btn" id="change-units">Change units</button>
+            <button type="button" class="btn btn-danger" id="remove-data">Delete your data</button>
         </div>
     </div>
+</header>
 
-    <div id="charts"></div>
-</div>
+<main id="charts"></main>
+
+<footer class="links">
+    <a href="https://github.com/karolszklarski/niustats">GitHub</a>
+    <a href="privacy.html">Privacy policy</a>
+    <button type="button" data-cc="show-preferencesModal">Cookie settings</button>
+</footer>
 
 <template id="chart-card">
-    <div class="card mb-3">
-        <div class="card-header"><b class="scooter-name"></b><span class="scooter-details"></span></div>
-        <div class="card-body">
-            <h5 class="card-title"></h5>
-            <canvas></canvas>
-        </div>
-    </div>
+    <section class="chart">
+        <p class="chart-scooter"><b class="scooter-name"></b><span class="scooter-details"></span></p>
+        <h3 class="chart-title"></h3>
+        <div class="plot"><canvas></canvas></div>
+    </section>
 </template>
 
 <script src="vendor/chart.umd.min.js"></script>

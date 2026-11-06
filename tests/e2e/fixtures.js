@@ -27,8 +27,9 @@ export async function storeItems(page, items) {
   }, Object.entries(items).map(([key, value]) => [key, typeof value === 'string' ? value : JSON.stringify(value)]));
 }
 
-/** Labels and data of the four charts the home page draws for one scooter. */
-export function readCharts(page, sn) {
+/** Labels and data of the four charts the home page draws for one scooter, once it has drawn them. */
+export async function readCharts(page, sn) {
+  await page.waitForFunction((sn) => Chart.getChart(`batteryDistanceChart${sn}`), sn);
   return page.evaluate((sn) => {
     const read = (id) => {
       const { labels, datasets } = Chart.getChart(id + sn).data;

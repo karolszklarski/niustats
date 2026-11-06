@@ -152,7 +152,7 @@ for (const path of ['/', '/pull.html', '/privacy.html']) {
     await page.goto(path);
     await banner(page).getByRole('button', { name: 'Decline' }).click();
 
-    const footer = page.locator('.card-footer');
+    const footer = page.locator('.links');
     await expect(footer.getByRole('link', { name: 'Privacy policy' })).toHaveAttribute('href', 'privacy.html');
     await footer.getByRole('button', { name: 'Cookie settings' }).click();
     await expect(settings(page)).toBeVisible();

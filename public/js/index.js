@@ -7,6 +7,7 @@ import { loadData, loadUnits, removeData, saveUnits } from './storage.js';
 const units = loadUnits();
 const data = loadData();
 const { vehicles, trips } = data;
+let drawn = [];
 
 document.getElementById('example-note').hidden = data !== exampleData;
 
@@ -20,13 +21,26 @@ document.getElementById('remove-data').addEventListener('click', () => {
   location.reload();
 });
 
-for (const [sn, scooterTrips] of Object.entries(trips)) {
-  const stats = monthlyStats(scooterTrips, units);
-  for (const { id, title, config } of charts(stats, units)) {
-    const canvas = addCard(sn, vehicles[sn], title);
-    canvas.id = id + sn;
-    new Chart(canvas, config);
-  }
+// Text on a canvas doesn't change when the font arrives, so the charts wait for it.
+document.fonts.ready.then(drawCharts);
+// The charts take their colours from the site's styles, which follow the system's light or dark mode.
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', drawCharts);
+
+function drawCharts() {
+  for (const chart of drawn) chart.destroy();
+  document.getElementById('charts').replaceChildren();
+  const css = getComputedStyle(document.documentElement);
+  const token = (name) => css.getPropertyValue(name).trim();
+  Chart.defaults.font.family = token('--font');
+  Chart.defaults.color = token('--chart-tick');
+
+  drawn = Object.entries(trips).flatMap(([sn, scooterTrips]) =>
+    charts(monthlyStats(scooterTrips, units), units, token).map(({ id, title, config }) => {
+      const canvas = addCard(sn, vehicles[sn], title);
+      canvas.id = id + sn;
+      return new Chart(canvas, config);
+    }),
+  );
 }
 
 /** Adds a card for one chart of a scooter and returns its canvas. Names are set as text, never as HTML. */
@@ -35,30 +49,32 @@ function addCard(sn, vehicle, title) {
   // Data stored by an earlier version of this site can lack the details of a scooter.
   card.querySelector('.scooter-name').textContent = vehicle ? vehicle.scooter_name : '';
   card.querySelector('.scooter-details').textContent = vehicle ? ` - ${vehicle.sku_name} - ${sn}` : sn;
-  card.querySelector('.card-title').textContent = title;
+  card.querySelector('.chart-title').textContent = title;
   const canvas = card.querySelector('canvas');
   document.getElementById('charts').append(card);
   return canvas;
 }
 
-function charts(stats, units) {
+function charts(stats, units, token) {
   const labels = stats.map(({ month }) => monthLabel(month));
   const series = (key) => stats.map((month) => month[key]);
+  const grid = token('--chart-grid');
+  const battery = token('--battery');
   const ranges = [
-    { label: 'Range from 100% to 30%', key: 'rangeTo30', color: '#aaffaa', lineColor: '#77ff77' },
-    { label: 'Range from 30% to 20%', key: 'rangeTo20', color: '#ffffaa', lineColor: '#ffff77' },
-    { label: 'Range from 20% to 10%', key: 'rangeTo10', color: '#ffaaaa', lineColor: '#ff7777' },
+    { label: 'Range from 100% to 30%', key: 'rangeTo30', color: token('--band-1') },
+    { label: 'Range from 30% to 20%', key: 'rangeTo20', color: token('--band-2') },
+    { label: 'Range from 20% to 10%', key: 'rangeTo10', color: token('--band-3') },
   ];
   const batteryLabel = `Battery used per ${units} (%)`;
   const distanceBars = () => ({
     label: `Distance ridden (${units})`,
     data: series('distance'),
-    backgroundColor: '#dddddd',
+    backgroundColor: token('--distance'),
     yAxisID: 'y2',
   });
-  const x = (stacked) => ({ stacked, grid: { drawOnChartArea: false } });
-  const y = (color, stacked) => ({ stacked, beginAtZero: true, grid: { z: 100, color } });
-  const y2 = { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false } };
+  const x = (stacked) => ({ stacked, grid: { drawOnChartArea: false }, border: { color: grid } });
+  const y = (stacked) => ({ stacked, beginAtZero: true, grid: { color: grid }, border: { display: false } });
+  const y2 = { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, border: { display: false } };
   const chart = (datasets, scales) => ({
     type: 'bar',
     data: { labels, datasets },
@@ -71,7 +87,7 @@ function charts(stats, units) {
       title: `Range in ${units}`,
       config: chart(
         ranges.map(({ label, key, color }) => ({ label, data: series(key), backgroundColor: color })),
-        { x: x(true), y: y('#44dd44', true) },
+        { x: x(true), y: y(true) },
       ),
     },
     {
@@ -79,25 +95,25 @@ function charts(stats, units) {
       title: `Range in ${units} and distance ridden`,
       config: chart(
         [
-          ...ranges.map(({ label, key, color, lineColor }) => ({
+          ...ranges.map(({ label, key, color }) => ({
             label,
             data: series(key),
             backgroundColor: color,
-            borderColor: lineColor,
+            borderColor: color,
             type: 'line',
             yAxisID: 'y',
           })),
           distanceBars(),
         ],
-        { x: x(true), y: y('#44dd44', true), y2 },
+        { x: x(true), y: y(true), y2 },
       ),
     },
     {
       id: 'batteryChart',
       title: batteryLabel,
       config: chart(
-        [{ label: batteryLabel, data: series('battery'), backgroundColor: '#ccccff' }],
-        { x: x(false), y: y('#aaaaff', false) },
+        [{ label: batteryLabel, data: series('battery'), backgroundColor: battery }],
+        { x: x(false), y: y(false) },
       ),
     },
     {
@@ -108,14 +124,14 @@ function charts(stats, units) {
           {
             label: batteryLabel,
             data: series('battery'),
-            backgroundColor: '#ccccff',
-            borderColor: '#9999ff',
+            backgroundColor: battery,
+            borderColor: battery,
             type: 'line',
             yAxisID: 'y',
           },
           distanceBars(),
         ],
-        { x: x(false), y: y('#aaaaff', false), y2 },
+        { x: x(false), y: y(false), y2 },
       ),
     },
   ];

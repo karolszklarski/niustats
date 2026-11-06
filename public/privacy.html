@@ -7,165 +7,176 @@
     <title>Privacy policy – Niu Stats</title>
     <meta name="description" content="What data Niu Stats handles: what passes through its server, what stays in your browser, and what Google Analytics gets if you accept it.">
     <link href="favicon.ico" rel="icon" type="image/x-icon">
-    <link href="vendor/bootstrap.min.css" rel="stylesheet">
     <link href="vendor/cookieconsent.css" rel="stylesheet">
+    <link href="css/site.css" rel="stylesheet">
 </head>
-<body>
+<body class="page-prose">
 
-<div class="container">
-    <div class="card mt-3 mb-3">
-        <h3 class="card-header"><a class="text-reset text-decoration-none" href=".">Niu Stats – battery range stats for Niu electric scooters</a></h3>
-        <div class="card-body">
-            <h4 class="card-title">Privacy policy</h4>
-            <p>
-                This page explains what data Niu Stats handles, why, and what your rights are.
-                In short: you can look at the example charts without giving any data.
-                If you sign in, your trips are saved only in your browser, and the server stores nothing about them.
-                Google Analytics runs only if you accept it.
-            </p>
+<header class="rail">
+    <a class="brand" href=".">
+        <svg class="brand-mark" viewBox="0 0 34 16" aria-hidden="true">
+            <rect class="mark-shell" x="0.75" y="0.75" width="29.5" height="14.5" rx="2.5"/>
+            <rect class="mark-nub" x="31.5" y="5" width="2.5" height="6" rx="1"/>
+            <rect class="mark-1" x="3" y="3" width="14" height="10" rx="1"/>
+            <rect class="mark-2" x="18.5" y="3" width="3.5" height="10" rx="1"/>
+            <rect class="mark-3" x="23.5" y="3" width="3.5" height="10" rx="1"/>
+        </svg>
+        <span class="brand-name">Niu Stats</span>
+        <span class="visually-hidden"> – </span>
+        <span class="brand-tag">battery range stats for Niu electric scooters</span>
+    </a>
+</header>
 
-            <h5 class="mt-4">Who runs this site</h5>
-            <p>
-                Karol Szklarski runs Niu Stats as a private project and is the controller of the personal data described here.
-                You can write to me at <a href="mailto:szklarskikarol@gmail.com">szklarskikarol@gmail.com</a>.
-                The site isn't affiliated with Niu.
-            </p>
+<main class="prose">
+    <h1 class="page-title">Privacy policy</h1>
+    <p class="page-lead">
+        This page explains what data Niu Stats handles, why, and what your rights are.
+        In short: you can look at the example charts without giving any data.
+        If you sign in, your trips are saved only in your browser, and the server stores nothing about them.
+        Google Analytics runs only if you accept it.
+    </p>
 
-            <h5 class="mt-4">When you load your data</h5>
-            <p>
-                All of this happens only if you sign in on the <a href="pull.html">Load your data</a> page.
-                You don't have to: without signing in, the site shows an example scooter.
-            </p>
-            <ul>
-                <li>
-                    <b>Login and password.</b>
-                    Your browser sends your login and an MD5 hash of your password straight to Niu, which answers with an access token.
-                    Your login and password never reach this site's server, and the site doesn't save them.
-                </li>
-                <li>
-                    <b>Scooters.</b>
-                    Your browser gets the list of your scooters straight from Niu, using the token.
-                </li>
-                <li>
-                    <b>Trips.</b>
-                    Niu's trip list only accepts requests from its mobile app, so your browser sends your access token and your scooter's serial number to this site's server, which asks Niu for you.
-                    Niu's answer holds all the details of each trip, which can include where and when it started and ended.
-                    The server sends only each trip's id, date, distance and battery use back to your browser and discards the rest.
-                    It doesn't save your token or any of this data.
-                </li>
-                <li>
-                    <b>What stays in your browser.</b>
-                    Your scooters' details as Niu lists them, and each trip's date, distance and battery use.
-                    They stay there until you press "Delete your data" on the home page or clear your browser's data.
-                </li>
-            </ul>
-            <p>
-                I handle this data to give you the charts you asked for.
-                The legal basis is Article 6(1)(b) GDPR: providing a service at your request.
-            </p>
+    <h2>Who runs this site</h2>
+    <p>
+        Karol Szklarski runs Niu Stats as a private project and is the controller of the personal data described here.
+        You can write to me at <a href="mailto:szklarskikarol@gmail.com">szklarskikarol@gmail.com</a>.
+        The site isn't affiliated with Niu.
+    </p>
 
-            <h5 class="mt-4">Server logs</h5>
-            <p>
-                OVHcloud, which hosts the site in the European Union, records each request in its web server logs: your IP address, the time, the address requested, the page you came from and your browser.
-                Your token and serial number aren't in these logs, because they travel in the body of the request.
-                The logs help keep the site running and secure, which is my legitimate interest (Article 6(1)(f) GDPR).
-                They are kept for the period OVHcloud sets for its hosting service.
-            </p>
+    <h2>When you load your data</h2>
+    <p>
+        All of this happens only if you sign in on the <a href="pull.html">Load your data</a> page.
+        You don't have to: without signing in, the site shows an example scooter.
+    </p>
+    <ul>
+        <li>
+            <b>Login and password.</b>
+            Your browser sends your login and an MD5 hash of your password straight to Niu, which answers with an access token.
+            Your login and password never reach this site's server, and the site doesn't save them.
+        </li>
+        <li>
+            <b>Scooters.</b>
+            Your browser gets the list of your scooters straight from Niu, using the token.
+        </li>
+        <li>
+            <b>Trips.</b>
+            Niu's trip list only accepts requests from its mobile app, so your browser sends your access token and your scooter's serial number to this site's server, which asks Niu for you.
+            Niu's answer holds all the details of each trip, which can include where and when it started and ended.
+            The server sends only each trip's id, date, distance and battery use back to your browser and discards the rest.
+            It doesn't save your token or any of this data.
+        </li>
+        <li>
+            <b>What stays in your browser.</b>
+            Your scooters' details as Niu lists them, and each trip's date, distance and battery use.
+            They stay there until you press "Delete your data" on the home page or clear your browser's data.
+        </li>
+    </ul>
+    <p>
+        I handle this data to give you the charts you asked for.
+        The legal basis is Article 6(1)(b) GDPR: providing a service at your request.
+    </p>
 
-            <h5 class="mt-4">Statistics: Google Analytics</h5>
-            <p>
-                Google Analytics runs only if you accept it in the cookie banner.
-                It shows me how many people visit the site and which pages they read.
-                The legal basis is your consent (Article 6(1)(a) GDPR).
-                You can withdraw it at any time under "Cookie settings" at the bottom of the page, which doesn't affect what happened before.
-                Declining changes nothing on the site.
-            </p>
-            <p>
-                If you accept, Google gets the page you're on, the page you came from, your IP address, which it uses to work out your approximate location, details of your device and browser, and random identifiers from two cookies.
-                The site tells Google not to use this data for advertising.
-                Google keeps it for at most 14 months after your last visit, and may transfer it to the USA under the EU-US Data Privacy Framework.
-                More in <a href="https://policies.google.com/privacy">Google's privacy policy</a>.
-            </p>
-            <p>
-                The site doesn't give Google your login, scooters or trips.
-                If you accept, though, Google's script runs on every page, including the sign-in page, and a script on a page can technically read what's on it.
-                If you'd rather avoid that, decline.
-            </p>
+    <h2>Server logs</h2>
+    <p>
+        OVHcloud, which hosts the site in the European Union, records each request in its web server logs: your IP address, the time, the address requested, the page you came from and your browser.
+        Your token and serial number aren't in these logs, because they travel in the body of the request.
+        The logs help keep the site running and secure, which is my legitimate interest (Article 6(1)(f) GDPR).
+        They are kept for the period OVHcloud sets for its hosting service.
+    </p>
 
-            <h5 class="mt-4">Cookies and browser storage</h5>
-            <div class="table-responsive">
-                <table class="table table-sm">
-                    <thead>
-                    <tr><th>Name</th><th>Kind</th><th>Purpose</th><th>Kept for</th></tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td><code>cc_cookie</code></td>
-                        <td>Cookie of this site</td>
-                        <td>Remembers your choice in the cookie banner</td>
-                        <td>6 months</td>
-                    </tr>
-                    <tr>
-                        <td><code>_ga</code>, <code>_ga_WDN0Q9FRX8</code></td>
-                        <td>Cookies of Google Analytics, only if you accept it</td>
-                        <td>Tell visits and visitors apart in the statistics</td>
-                        <td>2 years, or until you withdraw consent</td>
-                    </tr>
-                    <tr>
-                        <td><code>vehicles</code>, <code>trips</code></td>
-                        <td>Browser storage (<code>localStorage</code>) of this site, only if you load your data</td>
-                        <td>Your scooters and trips, for the charts</td>
-                        <td>Until you delete them</td>
-                    </tr>
-                    <tr>
-                        <td><code>units</code></td>
-                        <td>Browser storage (<code>localStorage</code>) of this site, only if you switch to miles</td>
-                        <td>Remembers that you chose miles</td>
-                        <td>Until you switch back to km</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-            <p>You can also delete or block cookies in your browser's settings.</p>
+    <h2>Statistics: Google Analytics</h2>
+    <p>
+        Google Analytics runs only if you accept it in the cookie banner.
+        It shows me how many people visit the site and which pages they read.
+        The legal basis is your consent (Article 6(1)(a) GDPR).
+        You can withdraw it at any time under "Cookie settings" at the bottom of the page, which doesn't affect what happened before.
+        Declining changes nothing on the site.
+    </p>
+    <p>
+        If you accept, Google gets the page you're on, the page you came from, your IP address, which it uses to work out your approximate location, details of your device and browser, and random identifiers from two cookies.
+        The site tells Google not to use this data for advertising.
+        Google keeps it for at most 14 months after your last visit, and may transfer it to the USA under the EU-US Data Privacy Framework.
+        More in <a href="https://policies.google.com/privacy">Google's privacy policy</a>.
+    </p>
+    <p>
+        The site doesn't give Google your login, scooters or trips.
+        If you accept, though, Google's script runs on every page, including the sign-in page, and a script on a page can technically read what's on it.
+        If you'd rather avoid that, decline.
+    </p>
 
-            <h5 class="mt-4">Who gets your data</h5>
-            <ul>
-                <li><b>OVHcloud</b> hosts the site, so your requests and everything passing through the server go through its systems in the European Union.</li>
-                <li>
-                    <b>Niu</b> gets your login, password hash, token and requests, because you're signing in to your Niu account.
-                    It handles them as a separate controller under <a href="https://global.niu.com/privacy">its own privacy policy</a>, which says data may be transferred outside the European Union, currently to China.
-                </li>
-                <li><b>Google</b> gets the data described above if you accept Google Analytics, and your messages if you write to me.</li>
-            </ul>
-            <p>I don't sell data, and nothing here involves automated decisions about you.</p>
-
-            <h5 class="mt-4">If you write to me</h5>
-            <p>
-                I use your address and message only to answer you, which is my legitimate interest (Article 6(1)(f) GDPR), and keep them for as long as it takes to deal with your question.
-                The mailbox is on Gmail, so Google stores them.
-            </p>
-
-            <h5 class="mt-4">Your rights</h5>
-            <p>
-                You have the right to access your data, get a copy, have it corrected or deleted, restrict how it's used, and move it elsewhere.
-                You can object to uses based on legitimate interest and withdraw consent at any time.
-                To use these rights, write to me.
-                The data in your browser is under your control: "Delete your data" on the home page removes it.
-                The server keeps none of it, so I can't look it up for you.
-            </p>
-            <p>
-                You can also complain to a data protection authority: in Poland, the President of the Personal Data Protection Office (Urząd Ochrony Danych Osobowych, ul. Stawki 2, 00-193 Warszawa), or the authority in the country where you live.
-            </p>
-
-            <p class="text-body-secondary mt-4 mb-0">Last updated: 5 November 2026.</p>
-        </div>
-        <div class="card-footer text-body-secondary">
-            <a class="text-muted me-3" href="https://github.com/karolszklarski/niustats">GitHub</a>
-            <a class="text-muted me-3" href="privacy.html">Privacy policy</a>
-            <button type="button" class="btn btn-link text-muted p-0 align-baseline" data-cc="show-preferencesModal">Cookie settings</button>
-        </div>
+    <h2>Cookies and browser storage</h2>
+    <div class="panel cookies">
+        <table>
+            <thead>
+            <tr><th scope="col">Name</th><th scope="col">Kind</th><th scope="col">Purpose</th><th scope="col">Kept for</th></tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td data-label="Name"><code>cc_cookie</code></td>
+                <td data-label="Kind">Cookie of this site</td>
+                <td data-label="Purpose">Remembers your choice in the cookie banner</td>
+                <td data-label="Kept for">6 months</td>
+            </tr>
+            <tr>
+                <td data-label="Name"><code>_ga</code>, <code>_ga_WDN0Q9FRX8</code></td>
+                <td data-label="Kind">Cookies of Google Analytics, only if you accept it</td>
+                <td data-label="Purpose">Tell visits and visitors apart in the statistics</td>
+                <td data-label="Kept for">2 years, or until you withdraw consent</td>
+            </tr>
+            <tr>
+                <td data-label="Name"><code>vehicles</code>, <code>trips</code></td>
+                <td data-label="Kind">Browser storage (<code>localStorage</code>) of this site, only if you load your data</td>
+                <td data-label="Purpose">Your scooters and trips, for the charts</td>
+                <td data-label="Kept for">Until you delete them</td>
+            </tr>
+            <tr>
+                <td data-label="Name"><code>units</code></td>
+                <td data-label="Kind">Browser storage (<code>localStorage</code>) of this site, only if you switch to miles</td>
+                <td data-label="Purpose">Remembers that you chose miles</td>
+                <td data-label="Kept for">Until you switch back to km</td>
+            </tr>
+            </tbody>
+        </table>
     </div>
-</div>
+    <p>You can also delete or block cookies in your browser's settings.</p>
+
+    <h2>Who gets your data</h2>
+    <ul>
+        <li><b>OVHcloud</b> hosts the site, so your requests and everything passing through the server go through its systems in the European Union.</li>
+        <li>
+            <b>Niu</b> gets your login, password hash, token and requests, because you're signing in to your Niu account.
+            It handles them as a separate controller under <a href="https://global.niu.com/privacy">its own privacy policy</a>, which says data may be transferred outside the European Union, currently to China.
+        </li>
+        <li><b>Google</b> gets the data described above if you accept Google Analytics, and your messages if you write to me.</li>
+    </ul>
+    <p>I don't sell data, and nothing here involves automated decisions about you.</p>
+
+    <h2>If you write to me</h2>
+    <p>
+        I use your address and message only to answer you, which is my legitimate interest (Article 6(1)(f) GDPR), and keep them for as long as it takes to deal with your question.
+        The mailbox is on Gmail, so Google stores them.
+    </p>
+
+    <h2>Your rights</h2>
+    <p>
+        You have the right to access your data, get a copy, have it corrected or deleted, restrict how it's used, and move it elsewhere.
+        You can object to uses based on legitimate interest and withdraw consent at any time.
+        To use these rights, write to me.
+        The data in your browser is under your control: "Delete your data" on the home page removes it.
+        The server keeps none of it, so I can't look it up for you.
+    </p>
+    <p>
+        You can also complain to a data protection authority: in Poland, the President of the Personal Data Protection Office (Urząd Ochrony Danych Osobowych, ul. Stawki 2, 00-193 Warszawa), or the authority in the country where you live.
+    </p>
+
+    <p class="updated">Last updated: 5 November 2026.</p>
+</main>
+
+<footer class="links">
+    <a href="https://github.com/karolszklarski/niustats">GitHub</a>
+    <a href="privacy.html">Privacy policy</a>
+    <button type="button" data-cc="show-preferencesModal">Cookie settings</button>
+</footer>
 
 <script type="module" src="js/consent.js"></script>
 </body>

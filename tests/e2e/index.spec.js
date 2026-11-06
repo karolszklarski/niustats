@@ -27,10 +27,10 @@ function statsTable(charts) {
 test('shows the example scooter when nothing is stored', async ({ page }) => {
   await page.goto('/');
 
-  const headers = page.locator('.card-header', { hasText: EXAMPLE_SN });
+  const headers = page.locator('.chart-scooter', { hasText: EXAMPLE_SN });
   await expect(headers).toHaveText(Array(4).fill(`Example - N-series Civic White (Gloss) - ${EXAMPLE_SN}`));
-  await expect(page.locator('.card-body .card-title')).toHaveText([
-    'See how far your Niu scooter goes on a charge',
+  await expect(page.locator('.intro h2')).toHaveText('See how far your Niu scooter goes on a charge');
+  await expect(page.locator('.chart-title')).toHaveText([
     'Range in km',
     'Range in km and distance ridden',
     'Battery used per km (%)',
@@ -45,9 +45,9 @@ test.describe('without JavaScript', () => {
     await page.goto('/');
 
     await expect(page).toHaveTitle('Niu Stats – battery range stats for Niu electric scooters');
-    await expect(page.locator('h3')).toHaveText('Niu Stats – battery range stats for Niu electric scooters');
+    await expect(page.locator('h1')).toHaveText('Niu Stats – battery range stats for Niu electric scooters');
     await expect(page.getByText('Sign in with your Niu app account')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Load your data', exact: true })).toHaveAttribute('href', 'pull.html');
+    await expect(page.getByRole('link', { name: 'Load your data', exact: true })).toHaveAttribute('href', 'pull.html');
     await expect(page.getByRole('link', { name: 'GitHub' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Privacy policy' })).toHaveAttribute('href', 'privacy.html');
   });
@@ -81,7 +81,7 @@ test('switches between kilometres and miles', async ({ page }) => {
   const km = await readCharts(page, EXAMPLE_SN);
 
   await reloadedBy(page, () => page.getByRole('button', { name: 'Change units' }).click());
-  await expect(page.locator('.card-body .card-title').nth(1)).toHaveText('Range in mi');
+  await expect(page.locator('.chart-title').first()).toHaveText('Range in mi');
   expect(await page.evaluate(() => localStorage.getItem('units'))).toBe('mi');
 
   const mi = await readCharts(page, EXAMPLE_SN);
@@ -92,7 +92,7 @@ test('switches between kilometres and miles', async ({ page }) => {
   expectScaled(mi.battery.datasets[0].data, km.battery.datasets[0].data, 1 / KM_TO_MI);
 
   await reloadedBy(page, () => page.getByRole('button', { name: 'Change units' }).click());
-  await expect(page.locator('.card-body .card-title').nth(1)).toHaveText('Range in km');
+  await expect(page.locator('.chart-title').first()).toHaveText('Range in km');
   expect(await page.evaluate(() => localStorage.getItem('units'))).toBeNull();
 });
 
@@ -111,9 +111,9 @@ test('charts stored scooters instead of the example', async ({ page }) => {
   });
   await page.goto('/');
 
-  await expect(page.locator('.card-header', { hasText: EXAMPLE_SN })).toHaveCount(0);
-  await expect(page.locator('.card-header', { hasText: 'Blue - NQi GTS - SN1' })).toHaveCount(4);
-  await expect(page.locator('.card-header', { hasText: 'Red - MQi+ - SN2' })).toHaveCount(4);
+  await expect(page.locator('.chart-scooter', { hasText: EXAMPLE_SN })).toHaveCount(0);
+  await expect(page.locator('.chart-scooter', { hasText: 'Blue - NQi GTS - SN1' })).toHaveCount(4);
+  await expect(page.locator('.chart-scooter', { hasText: 'Red - MQi+ - SN2' })).toHaveCount(4);
 
   // January: 30 points over 15 km is 2 points per km, so 70 points take 35 km and each next 10 points 5 km.
   const sn1 = await readCharts(page, 'SN1');
@@ -139,20 +139,6 @@ test('loads Chart.js from this site, not from a CDN', async ({ page, baseURL }) 
   expect(await readCharts(page, EXAMPLE_SN)).toBeTruthy();
 });
 
-test('loads Bootstrap from this site, not from a CDN', async ({ page, baseURL }) => {
-  const requests = [];
-  page.on('request', (request) => {
-    if (/bootstrap/i.test(request.url())) requests.push(request.url());
-  });
-  await page.goto('/');
-
-  expect(requests).toEqual([`${baseURL}/vendor/bootstrap.min.css`]);
-  await expect(page.getByRole('button', { name: 'Load your data', exact: true })).toHaveCSS(
-    'background-color',
-    'rgb(13, 110, 253)',
-  );
-});
-
 test('shows scooter names as text, not as HTML', async ({ page }) => {
   await storeItems(page, {
     vehicles: { SN1: { sn_id: 'SN1', scooter_name: '<img src=x onerror="window.injected=1">', sku_name: 'R&D' } },
@@ -160,7 +146,7 @@ test('shows scooter names as text, not as HTML', async ({ page }) => {
   });
   await page.goto('/');
 
-  await expect(page.locator('.card-header', { hasText: 'SN1' })).toHaveText(
+  await expect(page.locator('.chart-scooter', { hasText: 'SN1' })).toHaveText(
     Array(4).fill('<img src=x onerror="window.injected=1"> - R&D - SN1'),
   );
   expect(await page.evaluate(() => window.injected)).toBeUndefined();
@@ -172,7 +158,7 @@ test('mentions the example scooter only while the charts show it', async ({ page
 
   await storeItems(page, { vehicles: { SN1: vehicles.SN1 }, trips: { SN1: [{ d: 20240105, m: 10000, b: 20 }] } });
   await page.goto('/');
-  await expect(page.locator('.card-header', { hasText: 'SN1' })).toHaveCount(4);
+  await expect(page.locator('.chart-scooter', { hasText: 'SN1' })).toHaveCount(4);
   await expect(page.locator('#example-note')).toBeHidden();
 });
 
@@ -180,21 +166,21 @@ test('shows the example when only scooters are stored', async ({ page }) => {
   await storeItems(page, { vehicles });
   await page.goto('/');
 
-  await expect(page.locator('.card-header', { hasText: EXAMPLE_SN })).toHaveCount(4);
+  await expect(page.locator('.chart-scooter', { hasText: EXAMPLE_SN })).toHaveCount(4);
 });
 
 test('shows the example when only trips are stored', async ({ page }) => {
   await storeItems(page, { trips: { SN1: [{ d: 20240105, m: 10000, b: 20 }] } });
   await page.goto('/');
 
-  await expect(page.locator('.card-header', { hasText: EXAMPLE_SN })).toHaveCount(4);
+  await expect(page.locator('.chart-scooter', { hasText: EXAMPLE_SN })).toHaveCount(4);
 });
 
 test('names a scooter by its serial number when its details are missing', async ({ page }) => {
   await storeItems(page, { vehicles: { SN1: vehicles.SN1 }, trips: { SN2: [{ d: 20240105, m: 10000, b: 20 }] } });
   await page.goto('/');
 
-  await expect(page.locator('.card-header', { hasText: 'SN2' })).toHaveText(Array(4).fill('SN2'));
+  await expect(page.locator('.chart-scooter', { hasText: 'SN2' })).toHaveText(Array(4).fill('SN2'));
 });
 
 test('leaves out the 2% of trips with the highest battery use per km', async ({ page }) => {
@@ -236,10 +222,10 @@ test('leaves out trips above 5% per km when there are fewer than 50', async ({ p
 test('removing the data brings back the example', async ({ page }) => {
   await storeItems(page, { vehicles: { SN1: vehicles.SN1 }, trips: { SN1: [{ d: 20240105, m: 10000, b: 20 }] } });
   await page.goto('/');
-  await expect(page.locator('.card-header', { hasText: 'SN1' })).toHaveCount(4);
+  await expect(page.locator('.chart-scooter', { hasText: 'SN1' })).toHaveCount(4);
 
   await reloadedBy(page, () => page.getByRole('button', { name: 'Delete your data' }).click());
 
-  await expect(page.locator('.card-header', { hasText: EXAMPLE_SN })).toHaveCount(4);
+  await expect(page.locator('.chart-scooter', { hasText: EXAMPLE_SN })).toHaveCount(4);
   expect(await page.evaluate(() => [localStorage.getItem('vehicles'), localStorage.getItem('trips')])).toEqual([null, null]);
 });
