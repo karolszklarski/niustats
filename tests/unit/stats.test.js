@@ -57,6 +57,55 @@ test('leaves out a trip without a distance', () => {
   assert.equal(january.battery, 2);
 });
 
+test('leaves out a trip with a negative distance', () => {
+  assert.deepEqual(monthlyStats([trip(20240305, -500, 2)]), []);
+});
+
+test('counts only trips with a distance towards the 50 the percentile needs', () => {
+  // 49 trips with a distance, so the fixed limit of 5% per km applies and leaves out the one of 6% per km.
+  const [january] = monthlyStats([...januaryTrips(48, 10000, 20), trip(20240131, 1000, 6), trip(20240205, 0, 3)]);
+  assert.equal(january.distance, 480);
+});
+
+test('takes the percentile only from trips with a distance', () => {
+  // Of these 58 trips the percentile keeps 57, up to the one of 2.5% per km. Negative values below them would move
+  // the limit down and leave that trip out as well.
+  const [january] = monthlyStats([
+    trip(20240205, -500, 2),
+    trip(20240205, -500, 2),
+    ...januaryTrips(56, 10000, 20),
+    trip(20240130, 10000, 25),
+    trip(20240131, 1000, 50),
+  ]);
+  assert.equal(january.distance, 570);
+});
+
+const unusableTrips = {
+  'no distance and no battery use': { d: 20240205, m: 0, b: 0 },
+  'no distance': { d: 20240205, m: 0, b: 3 },
+  'a negative distance': { d: 20240205, m: -500, b: 2 },
+  'a missing distance': { d: 20240205, b: 3 },
+  'a missing battery use': { d: 20240205, m: 5000 },
+};
+
+for (const [name, unusable] of Object.entries(unusableTrips)) {
+  test(`keeps the percentile working among trips with ${name}`, () => {
+    // Of 58 usable trips the percentile leaves out one: the faulty reading of 50% per km.
+    const usable = [...januaryTrips(57, 10000, 20), trip(20240131, 1000, 50)];
+    const arrangements = {
+      'at the end': [...usable, unusable, unusable],
+      'at the start': [unusable, unusable, ...usable],
+      'in the middle': [...usable.slice(0, 29), unusable, unusable, ...usable.slice(29)],
+    };
+    for (const [where, trips] of Object.entries(arrangements)) {
+      const stats = monthlyStats(trips);
+      assert.deepEqual(stats.map(({ month }) => month), ['202401'], where);
+      assert.equal(stats[0].distance, 570, where);
+      assert.equal(stats[0].battery, 2, where);
+    }
+  });
+}
+
 test('converts the statistics to miles', () => {
   const [km] = monthlyStats([trip(20240105, 10000, 20)]);
   const [mi] = monthlyStats([trip(20240105, 10000, 20)], 'mi');

@@ -23,7 +23,7 @@ A request that fails on the way, through a dropped connection or a server error,
 
 For each trip Niu reports the distance and the battery used, in percentage points. For each scooter and calendar month, the site:
 
-1. Leaves out trips with no battery use, and trips whose battery use per kilometre is above the 98th percentile of all the scooter's trips. These are mostly very short trips and faulty readings, such as more than 100% used on a single trip. With fewer than 50 trips the percentile would leave nothing out, so the site leaves out trips above 5% per kilometre instead.
+1. Leaves out trips with no distance or no battery use, and trips whose battery use per kilometre is above the 98th percentile of all the scooter's trips with a distance. These are mostly very short trips and faulty readings, such as more than 100% used on a single trip. With fewer than 50 such trips the percentile would leave nothing out, so the site leaves out trips above 5% per kilometre instead.
 2. Divides the battery used by the distance ridden: battery percent per kilometre.
 3. Turns that into range: 70 points (from 100% down to 30%) divided by the battery percent per kilometre, plus 10 points each for the bands from 30% to 20% and from 20% to 10%. This assumes the battery drains at the same rate over the whole charge.
 

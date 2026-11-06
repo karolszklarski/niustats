@@ -55,13 +55,15 @@ export function monthlyStats(trips, units = 'km') {
 /**
  * The trips that used some battery, without those above the limit of battery use per distance: mostly very short
  * trips and faulty readings. The limit is the outlier percentile or, with too few trips for that, a fixed value.
+ * Trips without a usable distance or battery use go first: their Infinity or NaN would derail the percentile.
  */
 function withoutOutliers(trips) {
+  const usable = trips.filter((trip) => trip.m > 0 && trip.b >= 0);
   const batteryPerMetre = (trip) => trip.b / trip.m;
   const percentileLimit = () => {
-    const sorted = trips.map(batteryPerMetre).sort((a, b) => a - b);
-    return sorted[Math.ceil(trips.length * OUTLIER_PERCENTILE) - 1];
+    const sorted = usable.map(batteryPerMetre).sort((a, b) => a - b);
+    return sorted[Math.ceil(usable.length * OUTLIER_PERCENTILE) - 1];
   };
-  const limit = trips.length < TRIPS_FOR_PERCENTILE ? MAX_BATTERY_PER_METRE : percentileLimit();
-  return trips.filter((trip) => trip.b > 0 && batteryPerMetre(trip) <= limit);
+  const limit = usable.length < TRIPS_FOR_PERCENTILE ? MAX_BATTERY_PER_METRE : percentileLimit();
+  return usable.filter((trip) => trip.b > 0 && batteryPerMetre(trip) <= limit);
 }

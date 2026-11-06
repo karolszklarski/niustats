@@ -203,6 +203,12 @@ test('has no estimate when every trip is left out', () => {
   assert.equal(summary([trip(20240105, 3000, 0), trip(20240106, 900, 0)]).estimate, null);
 });
 
+test('has a proper estimate among trips without a distance', () => {
+  const { estimate, months } = summary([...month(202401, 58), trip(20240205, 0, 3), trip(20240206, 0, 3)]);
+  assert.equal(estimate.at10, 45);
+  assert.deepEqual(months.map(({ month }) => month), ['202401']);
+});
+
 test('adds up the range of a month', () => {
   assert.equal(monthRange({ rangeTo30: 35, rangeTo20: 5, rangeTo10: 5 }), 45);
 });
