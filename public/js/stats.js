@@ -1,6 +1,6 @@
 // Monthly range statistics of one scooter. README.md explains how they are computed and why.
 
-const MILES_PER_KM = 0.621371192;
+export const MILES_PER_KM = 0.621371192;
 
 /** Trips whose battery use per distance is above this percentile of all the scooter's trips are left out. */
 const OUTLIER_PERCENTILE = 0.98;
