@@ -6,11 +6,8 @@ const TOKEN_URL = 'https://account-fk.niu.com/v3/api/oauth2/token';
 const SCOOTERS_URL = 'https://app-api-fk.niu.com/v5/scooter/list';
 const TRIPS_URL = 'track.php';
 
-/**
- * The download asks for an empty page of trips this many times before taking it as the end of the list,
- * in case Niu returns an empty page too early.
- */
-const EMPTY_PAGE_ATTEMPTS = 4;
+/** The page size track.php asks Niu for. */
+const TRIPS_PER_PAGE = 100;
 
 /**
  * Pauses before trying again a request that failed on the way, so that one dropped connection among
@@ -18,8 +15,20 @@ const EMPTY_PAGE_ATTEMPTS = 4;
  */
 const RETRY_DELAYS = [1000, 2000, 4000];
 
+/**
+ * The download asks for an empty page of trips this many times before taking it as the end of the list,
+ * in case Niu returns an empty page too early.
+ */
+const EMPTY_PAGE_ATTEMPTS = RETRY_DELAYS.length + 1;
+
+/** Niu's answer when an account lists a scooter, but needs its owner's permission to read its trips. */
+const OWNER_PERMISSION_REQUIRED = 1549;
+
 /** A problem to show the user: the message from Niu, or what went wrong on the way. */
 export class NiuError extends Error {}
+
+/** Niu won't share the trips of this scooter, which says nothing about the other scooters of the account. */
+class TripsRefused extends NiuError {}
 
 /**
  * Signs in to Niu and downloads all scooters of the account with all their trips.
@@ -28,7 +37,8 @@ export class NiuError extends Error {}
  * @param {{ log: (message: string) => void, fetch?: typeof fetch, wait?: (ms: number) => Promise<void> }} options
  *   `log` gets the progress, as text
  * @returns {Promise<{ vehicles: object, trips: object }>} scooters and trips by serial number,
- *   in the format stored in localStorage
+ *   in the format stored in localStorage. A scooter whose trips Niu won't share has no trips, and
+ *   `tripsRefused` set.
  */
 export async function downloadData(
   login,
@@ -47,7 +57,16 @@ export async function downloadData(
   log(`${Object.keys(vehicles).join()}\n`);
 
   const trips = {};
-  for (const sn of Object.keys(vehicles)) trips[sn] = await downloadTrips(context, token, sn);
+  for (const [sn, vehicle] of Object.entries(vehicles)) {
+    try {
+      trips[sn] = await downloadTrips(context, token, sn);
+    } catch (error) {
+      if (!(error instanceof TripsRefused)) throw error;
+      log(`${error.message}, skipping this scooter\n`);
+      trips[sn] = [];
+      vehicle.tripsRefused = true;
+    }
+  }
   return { vehicles, trips };
 }
 
@@ -71,6 +90,7 @@ async function downloadTrips(context, token, sn) {
   const items = [];
   let page = 1;
   let emptyAnswers = 0;
+  let listShouldGoOn = false;
   for (;;) {
     context.log(`Getting trips for ${sn}, page ${page}... `);
     const data = await request(context, TRIPS_URL, {
@@ -82,16 +102,28 @@ async function downloadTrips(context, token, sn) {
       items.push(...data.items);
       page++;
       emptyAnswers = 0;
+      listShouldGoOn = data.items.length >= TRIPS_PER_PAGE;
     } else if (++emptyAnswers < EMPTY_PAGE_ATTEMPTS) {
-      context.log('empty, trying again\n');
+      // Every list ends with an empty page, usually after a shorter one: pausing there would only slow down every
+      // download. After a full page the list should go on, so Niu may just need a moment.
+      if (listShouldGoOn) {
+        const delay = RETRY_DELAYS[emptyAnswers - 1];
+        context.log(`empty, trying again in ${delay / 1000} s\n`);
+        await context.wait(delay);
+      } else {
+        context.log('empty, trying again\n');
+      }
     } else {
       context.log('no more trips\n');
-      return uniqueTrips(items)
+      return uniqueTrips(items.filter(hasEnded))
         .map((item) => ({ d: item.date, m: item.distance, b: item.power_consumption }))
         .sort((a, b) => a.d - b.d);
     }
   }
 }
+
+/** Niu lists a trip that is still going on as 'riding'. Its battery use isn't final, which would inflate the range. */
+const hasEnded = (item) => item.type !== 'riding';
 
 /**
  * Niu can list the same trip on two pages. Keeps the first copy of each trip id; trips without
@@ -141,6 +173,9 @@ async function send(fetch, url, init) {
   if (response.ok && body?.status === 0) return { data: body.data };
   // A server error or a rate limit can pass. An answer from Niu itself, such as a wrong password, will not.
   const worthRetrying = response.status >= 500 || response.status === 429;
-  if (typeof body?.desc === 'string' && body.status !== 0) return { error: new NiuError(body.desc), worthRetrying };
+  if (typeof body?.desc === 'string' && body.status !== 0) {
+    const Problem = body.status === OWNER_PERMISSION_REQUIRED ? TripsRefused : NiuError;
+    return { error: new Problem(body.desc), worthRetrying };
+  }
   return { error: new NiuError(`unexpected response from Niu (HTTP ${response.status})`), worthRetrying };
 }

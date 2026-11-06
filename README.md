@@ -14,10 +14,12 @@ Sign in with your Niu app account. The site downloads your trips and charts, mon
 
 1. `pull.html` sends your login and the MD5 hash of your password to the Niu account API, directly from your browser, and gets an access token.
 2. It reads the list of your scooters from the Niu API, also directly from your browser.
-3. It reads the trips of each scooter, 100 per page, through `track.php` on this site. The Niu trip list expects the mobile app's `User-Agent` header, which a web page cannot set: the same request sent straight from a browser gets HTTP 500. So `track.php` forwards the request with that header. Your token and Niu's full answer, with all the details of each trip, pass through the server, which stores none of it and sends back only each trip's id, date, distance and battery use.
-4. The scooters and trips are saved in your browser's `localStorage`, together, once all of them have arrived. For each trip that is its date, distance and battery use. `index.html` charts them, and shows example data when nothing is saved. `data.html` lists the saved trips as CSV.
+3. It reads the trips of each scooter, 100 per page, through `track.php` on this site. The Niu trip list expects the mobile app's `User-Agent` header, which a web page cannot set: the same request sent straight from a browser gets HTTP 500. So `track.php` forwards the request with that header. Your token and Niu's full answer, with all the details of each trip, pass through the server, which stores none of it and sends back only each trip's id, date, distance, battery use and whether it has ended.
+4. The scooters and trips are saved in your browser's `localStorage`, together, once all of them have arrived. For each trip that is its date, distance and battery use. A trip that is still going on is left out, because its battery use isn't final. `index.html` charts them, and shows example data when nothing is saved. `data.html` lists the saved trips as CSV.
 
-A request that fails on the way, through a dropped connection or a server error, is tried again after 1, 2 and 4 seconds. An answer from Niu itself, such as a wrong password, ends the download, and the data saved earlier stays as it was.
+A request that fails on the way, through a dropped connection or a server error, is tried again after 1, 2 and 4 seconds. An answer from Niu itself, such as a wrong password, ends the download, and the data saved earlier stays as it was. The exception is a scooter whose trips Niu shares only with its owner's permission: the download goes on without them, and the home page says so.
+
+An empty page of trips is asked for three more times before it counts as the end of the list. After a full page, when the list should go on, the same pauses come first. After a shorter page, the usual end of a list, there is no pause, so that the end of every download doesn't take seconds longer.
 
 ## Statistics
 

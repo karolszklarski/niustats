@@ -113,7 +113,7 @@ function addScooter(root, sn, vehicle, trips, t) {
     .filter(Boolean)
     .join(' · ');
   if (trips.length === 0) {
-    section.querySelector('.scooter-empty').hidden = false;
+    section.querySelector(`[data-empty="${vehicle?.tripsRefused ? 'refused' : 'no-trips'}"]`).hidden = false;
     section.querySelector('.scooter-body').hidden = true;
     return;
   }

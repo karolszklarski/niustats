@@ -52,7 +52,7 @@ $trip = [
     'distance' => 6461,
     'avespeed' => 21,
     'ridingtime' => 900,
-    'type' => 'track',
+    'type' => 'complete',
     'date' => 20240105,
     'startPoint' => ['lat' => 54.35, 'lng' => 18.65],
     'lastPoint' => ['lat' => 54.37, 'lng' => 18.61],

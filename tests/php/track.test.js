@@ -86,13 +86,13 @@ test('passes on only the trip fields the site uses', async () => {
   const { trackId } = json.data.items[0];
   assert.deepEqual(json, {
     status: 0,
-    data: { items: [{ trackId, date: 20240105, distance: 6461, power_consumption: 13 }] },
+    data: { items: [{ trackId, type: 'complete', date: 20240105, distance: 6461, power_consumption: 13 }] },
   });
 });
 
 test('passes on a trip without an id', async () => {
   const { json } = await trackPhp({ ...valid, sn: 'NOID' });
-  assert.deepEqual(json.data.items, [{ date: 20240105, distance: 6461, power_consumption: 13 }]);
+  assert.deepEqual(json.data.items, [{ type: 'complete', date: 20240105, distance: 6461, power_consumption: 13 }]);
 });
 
 test('passes on an empty page as an empty list', async () => {

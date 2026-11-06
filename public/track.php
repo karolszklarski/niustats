@@ -9,7 +9,7 @@ const USER_AGENT = 'manager/5.2.0 (android; SM-A202F 11);lang=pl-PL;clientIdenti
     . 'timezone=Europe/Warsaw;model=samsung_SM-A202F;deviceName=SM-A202F;ostype=android';
 const CONNECT_TIMEOUT = 5; // seconds
 const TIMEOUT = 15; // seconds, for the whole request
-const TRIP_FIELDS = ['trackId', 'date', 'distance', 'power_consumption'];
+const TRIP_FIELDS = ['trackId', 'type', 'date', 'distance', 'power_consumption'];
 const UNREADABLE = 'Niu sent an unreadable answer';
 
 header('Content-Type: application/json');

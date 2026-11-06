@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { test, expect, storeItems } from './fixtures.js';
+import { test, expect, monthOfTrips, readScooters, storeItems } from './fixtures.js';
 
 const TOKEN = 'test-token';
 
@@ -117,6 +117,25 @@ test('downloads scooters and trips into the browser', async ({ page }) => {
   });
   await expect(page.locator('.scooter-name')).toHaveText(['Blue', 'Red']);
   await expect(page.locator('.scooter-details')).toHaveText(['NQi GTS · SN1', 'MQi+ · SN2']);
+});
+
+test('skips a scooter whose trips need its owner\'s permission and says so on the home page', async ({ page }) => {
+  const trips = monthOfTrips(202401).map(({ d, m, b }, i) => track(`t${i}`, d, m, b));
+  await stubNiu(page, {
+    trips: { SN2: [trips] },
+    failures: { 'SN1 1': [(route) => route.fulfill({ json: { data: [], status: 1549, desc: 'Owner Permission Required' } })] },
+  });
+
+  await signIn(page, 'rider@example.com', 'secret');
+  await page.waitForURL((url) => url.pathname === '/');
+
+  const [refused, readable] = await readScooters(page);
+  expect(refused.name).toBe('Blue');
+  expect(refused.empty).toBe("Niu needs its owner's permission to share this scooter's trips with your account.");
+  expect(readable.name).toBe('Red');
+  expect(readable.empty).toBe('');
+  expect(readable.range).toBe('45 km');
+  expect((await storedTrips(page)).SN1).toEqual([]);
 });
 
 test('keeps one copy of a trip that Niu lists on two pages', async ({ page }) => {

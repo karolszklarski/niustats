@@ -89,6 +89,121 @@ test('reads trip pages through track.php until a page is empty four times', asyn
   assert.deepEqual(waits, []);
 });
 
+const pageOf = (size, prefix = 'a') => Array.from({ length: size }, (_, i) => track(`${prefix}${i}`, 20240105, 1000, 2));
+
+test('pauses before asking again for an empty page after a full one, as the list should go on', async () => {
+  let empties = 2;
+  const niu = fakeNiu({
+    pages: { SN1: [pageOf(100), [track('last', 20240106, 5000, 10)]] },
+    answer: (request) => isTripPage(request, 2) && empties-- > 0 && json({ status: 0, data: { items: [] } }),
+  });
+  const { data, log, waits } = await download(niu);
+
+  assert.equal(data.trips.SN1.length, 101);
+  assert.deepEqual(waits, [1000, 2000]);
+  assert.match(
+    log,
+    /page 2\.\.\. empty, trying again in 1 s\nGetting trips for SN1, page 2\.\.\. empty, trying again in 2 s\nGetting trips for SN1, page 2\.\.\. ok\n/,
+  );
+});
+
+test('takes a page that stays empty after a full one as the end of the list', async () => {
+  const niu = fakeNiu({ pages: { SN1: [pageOf(100)] } });
+  const { data, log, waits } = await download(niu);
+
+  assert.equal(data.trips.SN1.length, 100);
+  assert.deepEqual(waits, [1000, 2000, 4000]);
+  assert.equal(niu.requests.filter((request) => isTripPage(request, 2)).length, 4);
+  assert.match(log, /page 2\.\.\. no more trips\n$/);
+});
+
+test('counts a page longer than asked for as full, and one short of it as the end', async () => {
+  const pausesAfter = async (size) => (await download(fakeNiu({ pages: { SN1: [pageOf(size)] } }))).waits;
+
+  assert.deepEqual(await pausesAfter(150), [1000, 2000, 4000]);
+  assert.deepEqual(await pausesAfter(99), []);
+});
+
+test('does not pause for a scooter without trips', async () => {
+  const { data, waits } = await download(fakeNiu());
+
+  assert.deepEqual(data.trips, { SN1: [] });
+  assert.deepEqual(waits, []);
+});
+
+test('starts the pauses again on each page', async () => {
+  const emptyOnce = new Set(['2', '3']);
+  const niu = fakeNiu({
+    pages: { SN1: [pageOf(100, 'a'), pageOf(100, 'b'), [track('last', 20240106, 5000, 10)]] },
+    answer: ({ url, body }) => url === 'track.php' && emptyOnce.delete(body.get('page')) && json({ status: 0, data: { items: [] } }),
+  });
+  const { data, waits } = await download(niu);
+
+  assert.equal(data.trips.SN1.length, 201);
+  assert.deepEqual(waits, [1000, 1000]);
+});
+
+test('leaves out a trip that has not ended yet', async () => {
+  const niu = fakeNiu({
+    pages: {
+      SN1: [[{ ...track('a', 20240120, 37808, 7), type: 'riding' }, { ...track('b', 20240105, 10000, 20), type: 'complete' }]],
+    },
+  });
+  const { data } = await download(niu);
+
+  assert.deepEqual(data.trips, { SN1: [{ d: 20240105, m: 10000, b: 20 }] });
+});
+
+test('keeps the ended copy of a trip listed both as riding and as ended', async () => {
+  const niu = fakeNiu({
+    pages: {
+      SN1: [[{ ...track('a', 20240120, 37808, 7), type: 'riding' }], [{ ...track('a', 20240120, 40000, 50), type: 'complete' }]],
+    },
+  });
+  const { data } = await download(niu);
+
+  assert.deepEqual(data.trips, { SN1: [{ d: 20240120, m: 40000, b: 50 }] });
+});
+
+const twoScooters = json({ status: 0, data: { items: [{ sn_id: 'SN1', scooter_name: 'Blue' }, { sn_id: 'SN2', scooter_name: 'Red' }] } });
+const refusal = (status, desc) => json({ data: [], status, desc });
+const refusesSn1 = (answer) => (request) => {
+  if (request.url === SCOOTERS_URL) return twoScooters.clone();
+  if (request.url === 'track.php' && request.body.get('sn') === 'SN1') return answer.clone();
+};
+
+test('skips a scooter whose trips need its owner\'s permission, and reads the others', async () => {
+  const niu = fakeNiu({
+    pages: { SN2: [[track('a', 20240105, 10000, 20)]] },
+    answer: refusesSn1(refusal(1549, 'Owner Permission Required')),
+  });
+  const { data, log, waits } = await download(niu);
+
+  assert.deepEqual(data, {
+    vehicles: {
+      SN1: { sn_id: 'SN1', scooter_name: 'Blue', tripsRefused: true },
+      SN2: { sn_id: 'SN2', scooter_name: 'Red' },
+    },
+    trips: { SN1: [], SN2: [{ d: 20240105, m: 10000, b: 20 }] },
+  });
+  assert.match(log, /Getting trips for SN1, page 1\.\.\. Owner Permission Required, skipping this scooter\nGetting trips for SN2, page 1\.\.\. ok\n/);
+  assert.deepEqual(waits, []);
+  assert.equal(niu.requests.filter(({ url, body }) => url === 'track.php' && body.get('sn') === 'SN1').length, 1);
+});
+
+test('still ends the download on any other refusal for a scooter', async () => {
+  const niu = fakeNiu({ answer: refusesSn1(refusal(1131, 'Incorrect Login Details')) });
+
+  await assert.rejects(download(niu), new NiuError('Incorrect Login Details'));
+  assert.ok(niu.requests.every(({ url, body }) => url !== 'track.php' || body.get('sn') === 'SN1'));
+});
+
+test('reports the same refusal when signing in, where there is no scooter to skip', async () => {
+  const niu = fakeNiu({ answer: ({ url }) => url === TOKEN_URL && refusal(1549, 'Owner Permission Required') });
+
+  await assert.rejects(download(niu), (error) => error instanceof NiuError && error.message === 'Owner Permission Required');
+});
+
 test('keeps the first copy of each trip id, and every trip without one', () => {
   const withoutId = { date: 20240107, distance: 1, power_consumption: 1 };
   assert.deepEqual(
