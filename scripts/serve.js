@@ -8,6 +8,12 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../public/', import.meta.url));
 const port = Number(process.env.PORT ?? 4326);
 
+// The Content Security Policy of the host, read from .htaccess, so that the pages run here under the
+// policy they get on the site, and the browser tests see anything it would block.
+const htaccess = await readFile(join(root, '.htaccess'), 'utf8');
+const policy = htaccess.match(/^\s*Header always set Content-Security-Policy "([^"]+)"\s*$/m)?.[1];
+if (!policy) throw new Error('No Content-Security-Policy header found in public/.htaccess');
+
 const types = {
   '.css': 'text/css; charset=utf-8',
   '.html': 'text/html; charset=utf-8',
@@ -21,7 +27,7 @@ const types = {
 };
 
 function send(res, status, body, type = 'text/plain; charset=utf-8') {
-  res.writeHead(status, { 'content-type': type, 'cache-control': 'no-cache' }).end(body);
+  res.writeHead(status, { 'content-type': type, 'cache-control': 'no-cache', 'content-security-policy': policy }).end(body);
 }
 
 createServer(async (req, res) => {

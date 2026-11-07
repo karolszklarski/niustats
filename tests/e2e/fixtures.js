@@ -1,10 +1,21 @@
-// Shared test setup. No test talks to a real server, and an uncaught error in the page fails the test.
+// Shared test setup. No test talks to a real server, and an uncaught error in the page fails the test, as does
+// anything the site's Content Security Policy blocks: scripts/serve.js sends the one from .htaccess.
 import { test as base, expect } from '@playwright/test';
+
+const BLOCKED = 'Blocked by the Content Security Policy: ';
 
 export const test = base.extend({
   page: async ({ page, baseURL }, use) => {
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
+    await page.addInitScript((prefix) => {
+      document.addEventListener('securitypolicyviolation', (event) =>
+        console.error(`${prefix}${event.effectiveDirective} ${event.blockedURI}`),
+      );
+    }, BLOCKED);
+    page.on('console', (message) => {
+      if (message.type() === 'error' && message.text().startsWith(BLOCKED)) errors.push(message.text());
+    });
     // Routes a test adds to the page, such as a stubbed Niu API, take precedence over this one.
     await page.context().route('**/*', (route) => {
       const url = route.request().url();
@@ -13,7 +24,7 @@ export const test = base.extend({
       return route.abort('blockedbyclient');
     });
     await use(page);
-    expect(errors, 'uncaught errors in the page').toEqual([]);
+    expect(errors, 'uncaught errors and blocked content in the page').toEqual([]);
   },
 });
 

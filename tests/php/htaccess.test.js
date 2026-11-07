@@ -109,6 +109,51 @@ test('hides .git, which a copy of the site made by hand could bring along', asyn
   }
 });
 
+const SECURITY_HEADERS = {
+  'strict-transport-security': 'max-age=31536000',
+  'x-content-type-options': 'nosniff',
+  'referrer-policy': 'strict-origin-when-cross-origin',
+  'x-frame-options': 'SAMEORIGIN',
+  'cross-origin-opener-policy': 'same-origin',
+  'permissions-policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+  'content-security-policy': [
+    "default-src 'self'",
+    "script-src 'self' https://www.googletagmanager.com",
+    "connect-src 'self' https://account-fk.niu.com https://app-api-fk.niu.com https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com",
+    "img-src 'self' https://www.googletagmanager.com https://*.google-analytics.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'self'",
+  ].join('; '),
+};
+
+test('sends the security headers with pages, files, errors and redirects', async () => {
+  const requests = [
+    ['/', 200],
+    ['/pull.html', 200],
+    ['/js/pull.js', 200],
+    ['/missing.html', 404],
+    ['/.git/config', 404],
+    ['/js/', 403],
+    ['/unchanged/pull.html', 301],
+    ['/track.php', 400, { method: 'POST' }],
+  ];
+  for (const [path, expectedStatus, options] of requests) {
+    const { status, headers } = await send(path, options);
+    assert.equal(status, expectedStatus, path);
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) assert.equal(headers[name], value, `${name} of ${path}`);
+  }
+  const { status, headers } = await send('/pull.html', { host: 'www.niustats.com' });
+  assert.equal(status, 301);
+  assert.equal(headers['content-security-policy'], SECURITY_HEADERS['content-security-policy']);
+});
+
+test('does not name the PHP version', async () => {
+  const { headers } = await send('/track.php', { method: 'POST' });
+  assert.equal(headers['x-powered-by'], undefined);
+});
+
 test('runs track.php', async () => {
   const { status, text } = await send('/track.php', { method: 'POST' });
   assert.equal(status, 400);
