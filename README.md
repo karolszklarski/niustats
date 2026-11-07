@@ -61,7 +61,7 @@ npm run serve                     # local preview at http://127.0.0.1:4326/
 
 `npm run serve` serves `public/` as static files. `track.php` needs PHP, so downloading data from Niu works only on a PHP host.
 
-The tests never contact real servers. The Niu API is stubbed in each test, and any other external request is blocked. `npm run serve` sends the Content Security Policy from `public/.htaccess`, and a browser test fails on anything the policy blocks. `track.php` is tested on PHP 8.5 in Docker, the version `public/.ovhconfig` sets for the site on the host, against a stub of the Niu API in the same container, and `.htaccess` on Apache with the same PHP version.
+The tests never contact real servers. The Niu API is stubbed in each test, and any other external request is blocked. `npm run serve` sends the Content Security Policy from `public/.htaccess`, and a browser test fails on anything the policy blocks. `track.php` is tested on PHP 8.5 in Docker, the version the site runs on, against a stub of the Niu API in the same container, and `.htaccess` on Apache with the same PHP version.
 
 ## License
 
