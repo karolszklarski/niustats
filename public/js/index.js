@@ -65,6 +65,10 @@ function render() {
   Chart.defaults.color = t.tick;
 
   const root = document.getElementById('scooters');
+  // Open tables are read from the page, not from their toggle events: the browser sends that event in a later task,
+  // so a table opened just before this would be drawn closed again.
+  tablesOpen.clear();
+  for (const table of root.querySelectorAll('.twin[open]')) tablesOpen.add(table.dataset.sn);
   root.replaceChildren();
   if (Object.keys(data.trips).length === 0) {
     const message = document.createElement('p');
@@ -238,11 +242,8 @@ function fillTable(section, sn, { months, shortMonths }) {
   if (shortMonths) showNote(section, 'table-dash');
 
   const table = section.querySelector('.twin');
+  table.dataset.sn = sn;
   table.open = tablesOpen.has(sn);
-  table.addEventListener('toggle', () => {
-    if (table.open) tablesOpen.add(sn);
-    else tablesOpen.delete(sn);
-  });
 }
 
 function addChart(figure, key, months, t, { title, aria, legend, config }) {

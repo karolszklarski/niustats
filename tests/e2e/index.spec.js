@@ -263,6 +263,18 @@ test.describe('when the units or the light or dark mode change', () => {
       expect(await page.evaluate(() => window.scrollY)).toBe(before);
     });
   }
+
+  test('keeps a table open that was opened just before', async ({ page }) => {
+    // The browser reports an opened table in a later task, so here the page is drawn again before it does.
+    await page.evaluate(() => {
+      document.querySelectorAll('.twin')[1].open = true;
+      document.querySelector('[data-units="mi"]').click();
+    });
+
+    await expect(page.locator('.chart-title').first()).toHaveText('Range in mi');
+    await expect(page.locator('.scooter').nth(1).locator('tbody')).toBeVisible();
+    await expect(page.locator('.scooter').nth(0).locator('tbody')).toBeHidden();
+  });
 });
 
 test('charts stored scooters instead of the example', async ({ page }) => {
