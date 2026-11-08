@@ -3,11 +3,9 @@ import assert from 'node:assert/strict';
 import { monthLabel, monthlyStats } from '../../public/js/stats.js';
 
 const trip = (d, m, b) => ({ d, m, b });
-/** n trips in January 2024 with the same distance (metres) and battery use (percentage points). */
 const januaryTrips = (n, m, b) => Array.from({ length: n }, (_, i) => trip(20240101 + (i % 28), m, b));
 
 test('sums distance and battery use per calendar month', () => {
-  // January: 30 points over 15 km is 2 points per km, so 70 points take 35 km and each next 10 points 5 km.
   assert.deepEqual(monthlyStats([trip(20240105, 10000, 20), trip(20240120, 5000, 10), trip(20240203, 8000, 20)]), [
     { month: '202401', distance: 15, battery: 2, rangeTo30: 35, rangeTo20: 5, rangeTo10: 5 },
     { month: '202402', distance: 8, battery: 2.5, rangeTo30: 28, rangeTo20: 4, rangeTo10: 4 },
@@ -19,13 +17,10 @@ test('orders the months by date', () => {
   assert.deepEqual(stats.map(({ month }) => month), ['202312', '202401', '202403']);
 });
 
-/** 30 trips of 10 km and 20 points, so the scooter typically uses 2 points per km. */
 const ordinary = januaryTrips(30, 10000, 20);
-/** The distance of January, in km, with an ordinary month and one more trip. */
 const distanceWith = (extra) => monthlyStats([...ordinary, extra])[0].distance;
 
 test('keeps a trip of up to 3 times the battery its distance should take, plus 2 points', () => {
-  // 1 km should take 2 points, 1.15 km 2.3 points, and 10 km 20 points.
   assert.equal(distanceWith(trip(20240131, 1000, 8)), 301);
   assert.equal(distanceWith(trip(20240131, 1000, 9)), 300);
   assert.equal(distanceWith(trip(20240131, 1150, 9)), 300);
@@ -34,10 +29,8 @@ test('keeps a trip of up to 3 times the battery its distance should take, plus 2
 });
 
 test('keeps a trip whose distance should take up to 3 times its battery, plus 1 point', () => {
-  // 11 km should take 22 points, and 3 times 7 points plus 1 is 22.
   assert.equal(distanceWith(trip(20240131, 11000, 7)), 311);
   assert.equal(distanceWith(trip(20240131, 11000, 6)), 300);
-  // 10 km should take 20 points, and 3 times 7 points is already more.
   assert.equal(distanceWith(trip(20240131, 10000, 7)), 310);
   assert.equal(distanceWith(trip(20240131, 10000, 6)), 300);
 });
@@ -76,13 +69,11 @@ test('judges a scooter by its own battery use, however high', () => {
 });
 
 test('takes the typical battery use by distance, not by number of trips', () => {
-  // Most trips use 5 points per km, but over only 10 of the 310 km. Counted by trips, they would rule out the long ones.
   const [january] = monthlyStats([...januaryTrips(10, 30000, 30), ...januaryTrips(50, 200, 1)]);
   assert.equal(january.distance, 310);
 });
 
 test('takes the typical battery use halfway along the distance, in order of battery use', () => {
-  // 40 km at 1 point per km, 20 km at 2 and 30 km at 3: the middle of the 92 km is at 2, so 1 km should take 2 points.
   const [january] = monthlyStats([
     trip(20240101, 30000, 90),
     trip(20240102, 40000, 40),
@@ -94,7 +85,6 @@ test('takes the typical battery use halfway along the distance, in order of batt
 });
 
 test('takes the typical battery use only from trips that show some', () => {
-  // Missing readings over most of the distance would otherwise make the typical use 0.
   const [january] = monthlyStats([...januaryTrips(6, 10000, 0), ...januaryTrips(4, 10000, 20)]);
   assert.equal(january.distance, 40);
   assert.equal(january.battery, 2);
@@ -115,7 +105,6 @@ test('treats a scooter the same at any number of trips', () => {
 });
 
 test('leaves out a faulty reading however many very short trips there are', () => {
-  // Among the highest values per km, very short trips must not make room for a trip of 3 km and 30 points.
   const [january] = monthlyStats([...januaryTrips(60, 10000, 20), ...januaryTrips(20, 50, 1), trip(20240131, 3000, 30)]);
   assert.equal(january.distance, 601);
 });
@@ -158,7 +147,6 @@ const unusableTrips = {
 
 for (const [name, unusable] of Object.entries(unusableTrips)) {
   test(`keeps judging trips among trips with ${name}`, () => {
-    // Of 58 usable trips one is left out: the faulty reading of 50% per km.
     const usable = [...januaryTrips(57, 10000, 20), trip(20240131, 1000, 50)];
     const arrangements = {
       'at the end': [...usable, unusable, unusable],

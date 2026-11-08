@@ -8,16 +8,8 @@ const scooters = [
   { sn_id: 'SN2', scooter_name: 'Red', sku_name: 'MQi+' },
 ];
 
-/** A trip as the Niu trip list returns it, with only the fields the site reads. */
 const track = (trackId, date, distance, battery) => ({ trackId, date, distance, power_consumption: battery });
 
-/**
- * Stubs the Niu API. The browser calls the account and scooter endpoints directly and gets the trip list
- * through track.php. `login` is the answer to signing in, as JSON, or `loginResponse` the whole response.
- * `trips` holds the pages of each scooter; a page past the last one is empty.
- * `failures` maps "<sn> <page>" to handlers that answer the first requests for that page instead.
- * Returns the requests the page made.
- */
 async function stubNiu(
   page,
   {
@@ -93,14 +85,12 @@ test('downloads scooters and trips into the browser', async ({ page }) => {
     },
   ]);
   expect(requests.scooters).toEqual([{ token: TOKEN }]);
-  // Pages are read until one comes back empty four times in a row, then the next scooter starts.
   expect(requests.tracks.map(({ sn, page }) => `${sn} ${page}`)).toEqual([
     'SN1 1', 'SN1 2', 'SN1 3', 'SN1 3', 'SN1 3', 'SN1 3',
     'SN2 1', 'SN2 2', 'SN2 2', 'SN2 2', 'SN2 2',
   ]);
   expect(requests.tracks.every(({ token }) => token === TOKEN)).toBe(true);
 
-  // Trips are stored sorted by date, without their ids; the password and token are not stored.
   const stored = await page.evaluate(() =>
     Object.fromEntries(Object.keys(localStorage).sort().map((key) => [key, JSON.parse(localStorage.getItem(key))])),
   );

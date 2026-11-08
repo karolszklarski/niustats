@@ -1,4 +1,3 @@
-// CSV page: the trips the home page charts, one line per trip.
 import { loadData } from './storage.js';
 
 const { trips } = loadData();

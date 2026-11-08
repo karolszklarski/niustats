@@ -12,7 +12,6 @@ const overflow = (page) =>
   page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 const cssOf = (locator, property) =>
   locator.evaluate((element, property) => getComputedStyle(element)[property], property);
-/** The banner shows only when the page takes this browser for a person. */
 const showBanner = (page) => page.addInitScript(() => Object.defineProperty(navigator, 'webdriver', { get: () => false }));
 
 for (const path of PAGES) {
@@ -31,7 +30,6 @@ for (const path of PAGES) {
       await page.goto(path);
       await expect(page.locator('body')).toHaveCSS('background-color', colors.background);
       await expect(page.locator('body')).toHaveCSS('color', colors.text);
-      // Scrollbars and other parts drawn by the browser follow too.
       await expect(page.locator('html')).toHaveCSS('color-scheme', 'light dark');
     }
   });
@@ -80,7 +78,7 @@ test('loads the file with Polish letters only for a page that shows them', async
   await page.evaluate(() => document.fonts.ready);
   expect(fonts).not.toContain(latinExt);
 
-  await page.goto('/privacy.html'); // "Urząd"
+  await page.goto('/privacy.html');
   await page.evaluate(() => document.fonts.ready);
   expect(fonts).toContain(latinExt);
 });
@@ -141,14 +139,12 @@ test.describe('the figures at the top', () => {
         [0, 1].map((tile) => page.locator('[data-extreme]').nth(tile).boundingBox()),
       );
       if (width >= 640) {
-        // Side by side: the other two stacked on the right, half as wide and together as tall as the main figure.
         expect(main.width / best.width).toBeCloseTo(2, 1);
         expect(best.x).toBeGreaterThan(main.x + main.width - 1);
         expect(lowest.x).toBe(best.x);
         expect(lowest.y).toBeGreaterThan(best.y);
         expect(lowest.y + lowest.height).toBeCloseTo(main.y + main.height, 0);
       } else {
-        // The main figure on its own row, the other two side by side below it.
         expect(best.y).toBeGreaterThan(main.y + main.height - 1);
         expect(lowest.y).toBe(best.y);
         expect(lowest.x).toBeGreaterThan(best.x);
@@ -207,7 +203,6 @@ test.describe('the charts', () => {
       await new Promise((resolve) => setTimeout(resolve, 800));
       await route.continue();
     });
-    // Not until "load", which waits for the font itself, whatever the page does.
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => Chart.getChart(document.querySelector('.plot canvas')));
 
@@ -398,7 +393,6 @@ test.describe('the cookies table', () => {
       expect(await cssOf(cell, 'display')).toBe('block');
       expect(await cell.evaluate((element) => getComputedStyle(element, '::before').content)).toBe('"Name"');
       expect(await table(page).evaluate((element) => element.scrollWidth - element.parentElement.clientWidth)).toBeLessThanOrEqual(0);
-      // The longest cookie name must not stick out of its panel.
       const code = await table(page).locator('code', { hasText: '_ga_WDN0Q9FRX8' }).boundingBox();
       const panel = await page.locator('.cookies').boundingBox();
       expect(code.x + code.width).toBeLessThanOrEqual(panel.x + panel.width);

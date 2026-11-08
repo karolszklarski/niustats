@@ -18,10 +18,8 @@ const vehicles = {
   SN2: { sn_id: 'SN2', scooter_name: 'Red', sku_name: 'MQi+' },
 };
 
-/** n trips of the same distance (m, in metres) and battery use (b, in percentage points) in January 2024. */
 const januaryTrips = (n, m, b) => monthOfTrips(202401, n, m, b);
 
-/** One row per month: distance, battery per distance unit and the three range bands. */
 function statsTable({ range, rangeDistance, battery }) {
   const [to30, to20, to10] = range.datasets.map(({ data }) => data);
   const distance = rangeDistance.datasets[0].data;
@@ -155,7 +153,6 @@ test('shows the distance bars on demand, in line with the chart above them', asy
       return [left, right];
     }, selector);
   expect(await plotArea('.strip canvas')).toEqual(await plotArea('.plot canvas'));
-  // The time axis is named only under the lower chart.
   expect(await figure.evaluate((element) => Chart.getChart(element.querySelector('.plot canvas')).options.scales.x.ticks.display)).toBe(false);
 
   await distanceSwitch(page, 'range').uncheck();
@@ -187,8 +184,6 @@ test('takes a new size that arrives just as an animation ends', async ({ page })
   const chartWidth = () => page.evaluate(() => Chart.getChart(document.querySelector('.plot canvas')).width);
   expect(await chartWidth()).not.toBe(500);
 
-  // Chart.js keeps a size that arrives during an animation for the next drawing, and after the last frame of the
-  // animation no drawing follows. This calls what a change of the container's size calls, right at that moment.
   await page.evaluate(
     () =>
       new Promise((resolve) => {
@@ -258,14 +253,12 @@ test.describe('when the units or the light or dark mode change', () => {
 
       await act(page);
 
-      // The page is rebuilt, so the old canvas is gone.
       await expect.poll(() => oldCanvas.evaluate((canvas) => canvas.isConnected)).toBe(false);
       expect(await page.evaluate(() => window.scrollY)).toBe(before);
     });
   }
 
   test('keeps a table open that was opened just before', async ({ page }) => {
-    // The browser reports an opened table in a later task, so here the page is drawn again before it does.
     await page.evaluate(() => {
       document.querySelectorAll('.twin')[1].open = true;
       document.querySelector('[data-units="mi"]').click();
@@ -283,7 +276,7 @@ test('charts stored scooters instead of the example', async ({ page }) => {
     trips: {
       SN1: [
         trip(20240105, 20000, 40),
-        trip(20240110, 3000, 0), // no battery reading: left out
+        trip(20240110, 3000, 0),
         trip(20240120, 10000, 20),
         trip(20240203, 24000, 60),
       ],
@@ -297,7 +290,6 @@ test('charts stored scooters instead of the example', async ({ page }) => {
   expect([blue.name, blue.details]).toEqual(['Blue', 'NQi GTS · SN1']);
   expect([red.name, red.details]).toEqual(['Red', 'MQi+ · SN2']);
 
-  // January: 60 points over 30 km is 2 points per km, so 70 points take 35 km and each next 10 points 5 km.
   await distanceSwitch(page, 'range', 0).check();
   const charts = await readCharts(page, 0);
   expect(charts.range.labels).toEqual(['Jan 2024', 'Feb 2024']);
@@ -305,7 +297,6 @@ test('charts stored scooters instead of the example', async ({ page }) => {
   expect(charts.battery.datasets[0].data).toEqual([2, 2.5]);
   expect(charts.range.datasets.map(({ data }) => data)).toEqual([[35, 28], [5, 4], [5, 4]]);
 
-  // 25 points over 20 km is 1.25 points per km, so 90 points take 72 km. One month is too few for charts.
   expect(red.range).toBe('~72 km');
   expect(red.rows).toEqual([['Mar 2024', '72.0', '1.25', '20']]);
   expect(red.chartTitles).toEqual([]);
@@ -374,8 +365,8 @@ test('names a scooter by what is known about it', async ({ page }) => {
 
   const names = (await readScooters(page)).map(({ name, details }) => [name, details]);
   expect(names).toEqual([
-    ['SN2', ''], // no details at all
-    ['SN3', 'UQi'], // an empty name
+    ['SN2', ''],
+    ['SN3', 'UQi'],
     ['No model', 'SN4'],
     ['SN5', ''],
   ]);
@@ -409,7 +400,6 @@ test('keeps a trip that used somewhat more battery than usual', async ({ page })
   });
   await page.goto('/');
 
-  // 965 points over 481 km is 2.006 points per km, so 90 points take 44.9 km.
   expect((await readScooters(page))[0].rows).toEqual([['Jan 2024', '44.9', '2.01', '481']]);
 });
 
@@ -420,7 +410,6 @@ test('judges a scooter by its own battery use, however high', async ({ page }) =
   });
   await page.goto('/');
 
-  // 6 points per km, so 90 points take 15 km.
   expect((await readScooters(page))[0].rows).toEqual([['Jan 2024', '15.0', '6.00', '90']]);
 });
 

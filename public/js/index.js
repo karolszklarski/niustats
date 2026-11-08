@@ -1,15 +1,10 @@
-// Home page: for each scooter of the stored trips, or of the example data, a summary, two charts and a table of months.
-// Chart.js is loaded as a classic script before this module.
 import { exampleData } from './example.js';
 import { monthLabel, monthlyStats } from './stats.js';
 import { loadData, loadUnits, removeData, saveUnits } from './storage.js';
 import { minimumLabel, monthRange, scooterSummary } from './summary.js';
 
-/** Fixed, so that a chart and its distance bars have plot areas of the same width. Holds "8,000" and "120K". */
 const Y_AXIS_WIDTH = 48;
-/** From this many months, the time axis names years instead of months. */
 const YEAR_TICKS_FROM = 18;
-/** The width of a year on the time axis, with the space it needs around it, in pixels. */
 const YEAR_LABEL_WIDTH = 40;
 const BANDS = [
   ['Range from 100% to 30%', 'rangeTo30'],
@@ -17,7 +12,6 @@ const BANDS = [
   ['Range from 20% to 10%', 'rangeTo10'],
 ];
 
-// Like mode 'index', but a month without a figure doesn't react: its tooltip would be empty, with a total of 0.
 Chart.Interaction.modes.monthWithValue = (chart, event, options, useFinalPosition) =>
   Chart.Interaction.modes
     .index(chart, event, options, useFinalPosition)
@@ -28,7 +22,6 @@ const unitButtons = document.querySelectorAll('[data-units]');
 const removeButton = document.getElementById('remove-data');
 let units = loadUnits();
 let charts = [];
-/** What the visitor has turned on, which stays on when the page is drawn again. */
 const distanceShown = new Set();
 const tablesOpen = new Set();
 
@@ -47,9 +40,7 @@ for (const button of unitButtons) {
   });
 }
 
-// Text on a canvas doesn't change when the font arrives, so the charts wait for it.
 document.fonts.ready.then(render);
-// The charts take their colours from the site's styles, which follow the system's light or dark mode.
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
 
 function render() {
@@ -65,8 +56,6 @@ function render() {
   Chart.defaults.color = t.tick;
 
   const root = document.getElementById('scooters');
-  // Open tables are read from the page, not from their toggle events: the browser sends that event in a later task,
-  // so a table opened just before this would be drawn closed again.
   tablesOpen.clear();
   for (const table of root.querySelectorAll('.twin[open]')) tablesOpen.add(table.dataset.sn);
   root.replaceChildren();
@@ -137,7 +126,6 @@ function addScooter(root, sn, vehicle, trips, t) {
   }
   if (summary.shortMonths) showNote(section, 'months-left-out');
 
-  // A month with too little riding is a gap: it doesn't stretch the scale, and the distance bars still show it.
   const reliable = (key) => months.map((month) => (month.reliable ? month[key] : null));
   const period = `${monthLabel(months[0].month)} to ${monthLabel(months.at(-1).month)}`;
   addChart(section.querySelector('[data-chart="range"]'), `${sn}:range`, months, t, {
@@ -175,7 +163,6 @@ function addScooter(root, sn, vehicle, trips, t) {
           borderWidth: 2,
           borderJoinStyle: 'round',
           fill: 'origin',
-          // A line of a few months has visible points, and a month between two gaps would not show at all without one.
           pointRadius: ({ dataIndex: i }) => {
             const isolated = batteryValues[i] !== null && batteryValues[i - 1] == null && batteryValues[i + 1] == null;
             return months.length <= 12 || isolated ? 4 : 0;
@@ -215,7 +202,6 @@ function fillStats(section, { estimate, best, lowest }) {
   setText(section, 'range-label', `Range on a charge, ${estimate.latestYear ? 'latest 12 months' : 'all trips'}`);
   setText(section, 'range', Math.round(estimate.at10));
   setText(section, 'range-note', `From 100% to 10% battery, ${period}`);
-  // Rounded down: 49.6 km is still "only 49 km".
   setText(section, 'rough-distance', `${Math.floor(estimate.distance)} ${units}`);
   for (const level of ['at30', 'at20', 'at10']) setText(section, level, `${Math.round(estimate[level])} ${units}`);
 }
@@ -274,7 +260,6 @@ function addChart(figure, key, months, t, { title, aria, legend, config }) {
     if (on) distanceShown.add(key);
     else distanceShown.delete(key);
     strip.hidden = !on;
-    // The time axis is named only under the lower chart, so that both have plot areas of the same width.
     main.options.scales.x.ticks.display = !on;
     main.update('none');
     if (on && !stripChart) {
@@ -322,7 +307,6 @@ function barStyle(t) {
   };
 }
 
-/** One scale per chart: two scales in one chart would suggest a relation that depends only on how they are drawn. */
 function chartConfig(months, t, { type = 'bar', datasets, stacked = false, value, footer, yTicks = 6 }) {
   return {
     type,
@@ -334,15 +318,13 @@ function chartConfig(months, t, { type = 'bar', datasets, stacked = false, value
         ? false
         : {
             duration: 300,
-            // Chart.js keeps a size that arrives during an animation for the next drawing. After the last frame none
-            // follows, so a phone turned at that moment would keep a chart wider than the page.
             onComplete: ({ chart }) => chart.draw(),
           },
       interaction: { mode: 'monthWithValue', intersect: false },
       scales: {
         x: {
           stacked,
-          offset: true, // the points of a line in the middle of each month, right above the distance bars
+          offset: true,
           grid: { display: false },
           border: { color: t.grid },
           ticks: timeTicks(months),
@@ -355,7 +337,6 @@ function chartConfig(months, t, { type = 'bar', datasets, stacked = false, value
           ticks: {
             maxTicksLimit: yTicks,
             padding: 8,
-            // The axis has a fixed width, so long numbers, as after a faulty reading, are shortened: 12K.
             callback(tick, index, ticks) {
               if (tick >= 10000) return `${Math.round(tick / 1000)}K`;
               return Chart.Ticks.formatters.numeric.call(this, tick, index, ticks);
@@ -389,7 +370,7 @@ function chartConfig(months, t, { type = 'bar', datasets, stacked = false, value
             labelColor: (context) => ({
               borderColor: context.dataset.keyColor,
               backgroundColor: context.dataset.keyColor,
-              borderWidth: 2, // thinner than the box, which leaves a gap between the outline and the fill
+              borderWidth: 2,
             }),
             footer: footer ? (items) => footer(items.reduce((sum, item) => sum + item.parsed.y, 0)) : undefined,
           },
@@ -399,7 +380,6 @@ function chartConfig(months, t, { type = 'bar', datasets, stacked = false, value
   };
 }
 
-/** With a long history, names only the first month of each year, without tilting the text. */
 function timeTicks(months) {
   if (months.length <= YEAR_TICKS_FROM) {
     return { maxRotation: 0, autoSkip: true, callback: (_, index) => monthLabel(months[index].month) };
@@ -420,14 +400,12 @@ function timeTicks(months) {
   };
 }
 
-/** The Januaries to name. With a very long history on a narrow screen, every second year or fewer. */
 function namedYears(months, pixelsPerMonth) {
   const yearStep = Math.ceil(YEAR_LABEL_WIDTH / (12 * pixelsPerMonth));
   const named = new Set();
   months.forEach(({ month }, index) => {
     if (month.endsWith('01') && Number(month.slice(0, 4)) % yearStep === 0) named.add(index);
   });
-  // The start of the history gets a name too, if it fits before the first January.
   if (Math.min(...named) * pixelsPerMonth >= YEAR_LABEL_WIDTH) named.add(0);
   return named;
 }

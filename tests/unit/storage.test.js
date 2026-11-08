@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { exampleData } from '../../public/js/example.js';
 import { loadData, loadUnits, removeData, saveData, saveUnits } from '../../public/js/storage.js';
 
-/** The part of the Web Storage API the site uses, kept in memory. */
 class MemoryStorage {
   #items = new Map();
 

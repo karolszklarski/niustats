@@ -1,6 +1,5 @@
 name: Tests
 
-# Pull requests run this directly. A push to main runs it as the first step of deploy.yml.
 on:
   pull_request:
   workflow_call:
@@ -13,7 +12,6 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      # Actions are pinned to commit SHAs, so a moved tag cannot change what runs here.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false

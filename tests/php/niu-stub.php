@@ -1,7 +1,4 @@
 <?php
-// Stands in for the Niu API in the track.php tests. It answers with one trip, with the fields of a real
-// answer, whose id holds the request it got, so the tests can see what track.php sent.
-// The serial number in the request can ask for a different answer.
 $body = file_get_contents('php://input');
 $sn = json_decode($body, true)['sn'] ?? '';
 

@@ -1,6 +1,3 @@
-// Tests public/track.php on the PHP version of the web host, in Docker. A stub of the Niu API
-// (niu-stub.php) runs in the same container, so the tests never reach the real Niu servers.
-// PHP runs with short tags off and every error, warning and deprecation printed into the response.
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
@@ -20,7 +17,6 @@ before(async () => {
   try {
     docker('rm', '-f', CONTAINER);
   } catch {
-    // No container left over from an earlier run.
   }
   docker(
     'run', '--rm', '--detach', '--name', CONTAINER,
@@ -37,7 +33,6 @@ before(async () => {
     try {
       if ((await fetch(`http://127.0.0.1:${PORT}/robots.txt`)).ok) break;
     } catch {
-      // The server is not up yet.
     }
     if (attempt === 50) throw new Error(`PHP did not start:\n${docker('logs', CONTAINER)}`);
     await sleep(200);
@@ -69,7 +64,6 @@ test('forwards the request to the Niu trip list as the mobile app', async () => 
   const { status, json } = await trackPhp(valid);
   assert.equal(status, 200);
   assert.equal(json.status, 0);
-  // The stub puts the request it got into the id of the trip.
   const { body, ...request } = JSON.parse(json.data.items[0].trackId);
   assert.deepEqual(request, {
     method: 'POST',

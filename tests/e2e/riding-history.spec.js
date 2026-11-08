@@ -1,13 +1,9 @@
-// What the home page shows for riding histories that are not a steady year of riding: new scooters, single trips in
-// a month, winter breaks, a very long history, and readings that make no sense. The rules themselves are tested in
-// tests/unit/summary.test.js; these tests are about what reaches the page.
 import { distanceSwitch, expect, monthOfTrips, monthsBetween, readCharts, readScooters, storeItems, test, trip } from './fixtures.js';
 
 const riding = (months, n, m, b) => months.flatMap((month) => monthOfTrips(month, n, m, b));
 const blue = { sn_id: 'SN1', scooter_name: 'Blue', sku_name: 'NQi GTS' };
 const NINE_YEARS = riding(monthsBetween(201711, 202610), 4);
 
-/** Opens the home page with the trips of one scooter, or { serial number: trips } of several. */
 async function show(page, trips, { units } = {}) {
   const allTrips = Array.isArray(trips) ? { SN1: trips } : trips;
   const vehicles = Object.fromEntries(Object.keys(allTrips).map((sn) => [sn, { ...blue, sn_id: sn }]));
@@ -21,7 +17,6 @@ const overflow = (page) =>
   page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 const shownText = (page) => page.evaluate(() => document.body.innerText);
 
-/** The months named on a time axis, and the smallest distance in pixels between two names. */
 const namedOnAxis = (page, index = 0) =>
   page.evaluate((index) => {
     const canvas = document.querySelectorAll('.scooter')[index].querySelector('[data-chart="range"] .plot canvas');
@@ -46,7 +41,6 @@ test.describe('a new scooter', () => {
     expect(scooter.chartTitles).toEqual([]);
     expect(scooter.notes).toEqual(['charts-wait']);
     expect(scooter.noteTexts).toEqual(['Monthly charts appear once two months each have at least 20 km ridden.']);
-    // The month itself is listed, without figures.
     expect(scooter.rows).toEqual([['Jan 2024', '–', '–', '20']]);
     expect(scooter.tableNote).toBe('– means under 20 km ridden that month.');
   });
@@ -115,7 +109,6 @@ test.describe('a new scooter', () => {
 });
 
 test.describe('riding only from April to October', () => {
-  // The earlier seasons use twice the battery, so the result shows which months went into it.
   const trips = [
     ...riding([2023, 2024, 2025].flatMap((year) => monthsBetween(year * 100 + 4, year * 100 + 10)), 8, 10000, 40),
     ...riding(monthsBetween(202604, 202610)),
@@ -125,11 +118,10 @@ test.describe('riding only from April to October', () => {
     const [scooter] = await show(page, trips);
     const { range, battery } = await readCharts(page);
 
-    expect(range.labels).toHaveLength(43); // April 2023 to October 2026
-    expect(emptyMonths(range)).toHaveLength(15); // three winters of five months
+    expect(range.labels).toHaveLength(43);
+    expect(emptyMonths(range)).toHaveLength(15);
     expect(range.labels.slice(6, 8)).toEqual(['Oct 2023', 'Nov 2023']);
     expect(battery.datasets[0].data.filter((value) => value === null)).toHaveLength(15);
-    // A gap in the riding is no reason for a warning, and has no row in the table.
     expect(scooter.notes).toEqual([]);
     expect(scooter.tableNote).toBe('');
     expect(scooter.rows).toHaveLength(28);
@@ -148,9 +140,9 @@ test.describe('riding only from April to October', () => {
 test.describe('a month with a single trip', () => {
   const trips = [
     ...riding(monthsBetween(202501, 202506)),
-    trip(20250715, 1200, 1), // a short trip: 90 points would take 108 km
+    trip(20250715, 1200, 1),
     ...riding(monthsBetween(202508, 202601)),
-    trip(20260215, 25000, 25), // a long trip: 90 points take 90 km
+    trip(20260215, 25000, 25),
     ...riding(monthsBetween(202603, 202610)),
   ];
 
@@ -216,7 +208,7 @@ test.describe('back after a long break', () => {
 
   test('shows the break on the time axis', async ({ page }) => {
     await show(page, trips);
-    expect(emptyMonths((await readCharts(page)).range)).toHaveLength(17); // November 2024 to March 2026
+    expect(emptyMonths((await readCharts(page)).range)).toHaveLength(17);
   });
 });
 
@@ -258,7 +250,6 @@ test('charts two months far apart, on a continuous axis', async ({ page }) => {
 });
 
 test('counts the latest 12 months across New Year, and names every month', async ({ page }) => {
-  // January 2025 uses twice the battery, and is the 13th month back from January 2026.
   const [scooter] = await show(page, [...monthOfTrips(202501, 8, 10000, 40), ...riding(monthsBetween(202502, 202601))]);
 
   expect(scooter.range).toBe('45 km');
@@ -297,7 +288,6 @@ test.describe('readings that make no sense', () => {
   for (const width of [1440, 320]) {
     test(`fits a huge distance at ${width} px, with shortened numbers on the axis`, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 });
-      // Every trip reads the same, so nothing shows that it is faulty: 12 000 km a month, and a range of 180 000 km.
       const huge = (month) => monthOfTrips(month, 3, 4000000, 2);
       await show(page, [...huge(202401), ...huge(202402), ...huge(202403)]);
       await distanceSwitch(page, 'range').check();
@@ -355,7 +345,6 @@ test.describe('a long history', () => {
 test.describe('the tooltip', () => {
   const trips = [...riding(monthsBetween(202404, 202410)), ...riding(monthsBetween(202504, 202510))];
 
-  /** Moves the mouse over a month of a chart and returns what its tooltip shows. */
   async function hover(page, canvas, month) {
     await canvas.scrollIntoViewIfNeeded();
     const place = await canvas.evaluate((element, month) => {
@@ -414,7 +403,6 @@ test.describe('the tooltip', () => {
 
     const summer = await hover(page, canvas, 'Jul 2024');
     await expect.poll(async () => (await summer()).opacity).toBe(1);
-    // 45 km is 27.96 mi.
     expect((await summer()).footer).toEqual(['28.0 mi  Range from 100% to 10%']);
   });
 });
@@ -431,11 +419,9 @@ test.describe('in miles', () => {
       { units: 'mi' },
     );
 
-    // 20 km is 12.4 mi, which the text rounds up.
     expect(waiting.wait).toBe('Not enough trips yet. The estimate appears after about 13 mi of riding.');
     expect(waiting.noteTexts).toEqual(['Monthly charts appear once two months each have at least 13 mi ridden.']);
     expect(waiting.tableNote).toBe('– means under 13 mi ridden that month.');
-    // 29 km is 18.02 mi, and 45 km is 27.96 mi.
     expect(rough.caution).toBe('Rough estimate: based on only 18 mi so far.');
     expect(rough.range).toBe('~28 mi');
     expect(withShortMonth.noteTexts).toEqual([

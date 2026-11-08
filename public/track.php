@@ -7,14 +7,13 @@ declare(strict_types=1);
 const NIU_API = 'https://app-api-fk.niu.com';
 const USER_AGENT = 'manager/5.2.0 (android; SM-A202F 11);lang=pl-PL;clientIdentifier=Overseas;'
     . 'timezone=Europe/Warsaw;model=samsung_SM-A202F;deviceName=SM-A202F;ostype=android';
-const CONNECT_TIMEOUT = 5; // seconds
-const TIMEOUT = 15; // seconds, for the whole request
+const CONNECT_TIMEOUT = 5;
+const TIMEOUT = 15;
 const TRIP_FIELDS = ['trackId', 'type', 'date', 'distance', 'power_consumption'];
 const UNREADABLE = 'Niu sent an unreadable answer';
 
 header('Content-Type: application/json');
 
-/** Ends with an error shaped like a failed Niu answer, which the download page shows to the user. */
 function fail(int $httpStatus, string $message): never
 {
     http_response_code($httpStatus);
@@ -27,8 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     fail(405, 'Method not allowed');
 }
 
-// The values go into the JSON body and a header of the request to Niu, so only the expected characters
-// pass: \z rather than $, which would also accept a line break at the end.
 $page = $_POST['page'] ?? '';
 $sn = $_POST['sn'] ?? '';
 $token = $_POST['token'] ?? '';
@@ -42,7 +39,6 @@ if (!is_string($token) || !preg_match('/^[\x21-\x7e]{1,4096}\z/', $token)) {
     fail(400, 'Invalid token');
 }
 
-// The tests point this at a stub of the Niu API.
 $api = getenv('NIU_API_URL') ?: NIU_API;
 
 $curl = curl_init("$api/v5/track/list/v3");
@@ -66,13 +62,11 @@ if ($code !== 200) {
     fail(502, "Niu answered with HTTP $code");
 }
 
-// A trip id too long for a PHP integer stays a string, so it keeps all its digits.
 $answer = json_decode($output, true, 512, JSON_BIGINT_AS_STRING);
 if (!is_array($answer) || !is_int($answer['status'] ?? null)) {
     fail(502, UNREADABLE);
 }
 if ($answer['status'] !== 0) {
-    // A refusal from Niu, such as an expired token, which the download page shows to the user.
     echo json_encode(['data' => [], 'status' => $answer['status'], 'desc' => $answer['desc'] ?? 'Niu refused the request']);
     exit;
 }

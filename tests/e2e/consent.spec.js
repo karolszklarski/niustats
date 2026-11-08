@@ -6,15 +6,10 @@ const GA_COOKIES = ['_ga', '_ga_WDN0Q9FRX8'];
 
 const isGoogleAnalytics = (url) => url.hostname === 'www.googletagmanager.com';
 
-/** vanilla-cookieconsent shows nothing to automated browsers, so the page has to take this one for a person. */
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => Object.defineProperty(navigator, 'webdriver', { get: () => false }));
 });
 
-/**
- * Stands in for Google's script, which writes the cookies Google Analytics really uses and an advertising
- * key in localStorage. Returns the addresses the page contacted outside this site.
- */
 async function stubGoogleAnalytics(page, baseURL) {
   const external = [];
   page.on('request', (request) => {

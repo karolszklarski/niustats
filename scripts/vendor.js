@@ -1,11 +1,6 @@
-// Copies the browser libraries the site uses, with their licences, from node_modules into public/vendor/,
-// so that the pages load them from this site instead of a CDN. Their versions are pinned in package.json;
-// after changing one, run: npm run vendor
-// tests/unit/vendor.test.js checks that the copies are the files of the installed packages.
 import { copyFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-/** File name in public/vendor/ → path in node_modules. */
 export const vendorFiles = {
   'chart.umd.min.js': 'chart.js/dist/chart.umd.min.js',
   'chart.js-LICENSE.md': 'chart.js/LICENSE.md',

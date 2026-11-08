@@ -7,7 +7,6 @@ import { minimumLabel, monthRange, scooterSummary } from '../../public/js/summar
 const MILES_PER_KM = 0.621371192;
 
 const trip = (d, m, b) => ({ d, m, b });
-/** n trips in one month, by default of 10 km and 20 points: 2 points per km, so 45 km from 100% to 10%. */
 const month = (yyyymm, n = 8, m = 10000, b = 20) =>
   Array.from({ length: n }, (_, i) => trip(yyyymm * 100 + 1 + (i % 28), m, b));
 const summary = (trips, units = 'km') => scooterSummary(monthlyStats(trips, units), units);
@@ -49,14 +48,12 @@ test('says how far a charge goes down to 30%, 20% and 10%', () => {
 });
 
 test('weighs the months of the estimate by the distance ridden', () => {
-  // 240 points over 100 km is 2.4 points per km, while the average of the two months' ranges would be 33.75 km.
   const { estimate } = summary([trip(20240105, 80000, 160), trip(20240205, 20000, 80)]);
   close(estimate.at10, 37.5);
   close(estimate.distance, 100);
 });
 
 test('bases the estimate on the 12 months up to the last trip, across New Year', () => {
-  // January 2025 uses twice the battery, and is the 13th month back from January 2026.
   const months = [202502, 202503, 202504, 202505, 202506, 202507, 202508, 202509, 202510, 202511, 202512, 202601];
   const { estimate } = summary([...month(202501, 8, 10000, 40), ...months.flatMap((m) => month(m))]);
   assert.equal(estimate.at10, 45);
@@ -101,7 +98,6 @@ test('falls back to the whole history after a long break with little riding sinc
 });
 
 test('stays with the latest 12 months from exactly 50 km', () => {
-  // The first month uses twice the battery, so the result shows which months went in.
   const earlier = month(202301, 8, 10000, 40);
   const atLimit = summary([...earlier, trip(20240605, 50000, 100)]).estimate;
   assert.equal(atLimit.at10, 45);
@@ -135,10 +131,10 @@ test('needs two months of at least 50 km for the best and the lowest', () => {
 
 test('counts a month of exactly 50 km for the best and the lowest, and not one just below', () => {
   const { best, lowest } = summary([
-    trip(20240105, 50000, 100), // 2 points per km
-    trip(20240205, 50000, 50), // 1 point per km
-    trip(20240305, 49900, 200), // 4 points per km, but too short to be the lowest
-    trip(20240405, 49900, 25), // 0.5 points per km, but too short to be the best
+    trip(20240105, 50000, 100),
+    trip(20240205, 50000, 50),
+    trip(20240305, 49900, 200),
+    trip(20240405, 49900, 25),
   ]);
   assert.equal(best.month, '202402');
   assert.equal(lowest.month, '202401');
@@ -151,7 +147,6 @@ test('looks for the best and the lowest in the whole history', () => {
 });
 
 test('does not let a single short trip be the best month', () => {
-  // 1 point over 1.2 km would be a range of 108 km.
   const { best } = summary([...month(202401), trip(20240205, 1200, 1), ...month(202403, 8, 10000, 30)]);
   assert.equal(best.month, '202401');
 });
@@ -216,7 +211,6 @@ test('adds up the range of a month', () => {
 test('states the minimum distance in whole units, rounded up', () => {
   assert.equal(minimumLabel(), '20 km');
   assert.equal(minimumLabel('km'), '20 km');
-  // 20 km is 12.4 mi, so "at least 12 mi" would promise too little.
   assert.equal(minimumLabel('mi'), '13 mi');
 });
 
@@ -245,7 +239,6 @@ test('says the same in kilometres and miles, right at the limits', () => {
     'just below 50 km': [trip(20240105, 49900, 100)],
     'exactly 50 km': [trip(20240105, 50000, 100)],
     'exactly 50 km in several trips': [trip(20240105, 8300, 17), trip(20240106, 17600, 35), trip(20240107, 24100, 48)],
-    // These come out just short of the limit when added up in miles.
     'exactly 20 km over three months': [trip(20240105, 2400, 5), trip(20240205, 14200, 28), trip(20240305, 3400, 7)],
     'exactly 50 km over two months': [trip(20240105, 6800, 14), trip(20240205, 43200, 86)],
     'two months of exactly 20 km': [trip(20240105, 20000, 40), trip(20240205, 20000, 40)],

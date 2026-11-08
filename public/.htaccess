@@ -1,30 +1,18 @@
 Options -MultiViews -Indexes
 
-# A copy of the site made by hand from a Git checkout could bring .git along.
 RedirectMatch 404 (^|/)\.git(/|$)
 
 <IfModule mod_headers.c>
-    # Browsers check every file each time, and an unchanged file comes back as a short 304 answer.
-    # File names carry no version, so a longer cache would keep old code in returning visitors' browsers.
     Header set Cache-Control "no-cache"
-    # The host adds its own Expires header, which contradicts Cache-Control.
     Header unset Expires
 
-    # "always" also covers errors and redirects.
     Header always set Strict-Transport-Security "max-age=31536000"
     Header always set X-Content-Type-Options "nosniff"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     Header always set X-Frame-Options "SAMEORIGIN"
-    # A page that opens this site, or that this site opens, gets no hold of its window.
     Header always set Cross-Origin-Opener-Policy "same-origin"
     Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
-    # The sign-in page takes the Niu password, so the pages may run scripts only from this site and,
-    # once a visitor accepts it, Google Analytics, and may connect only to the Niu API and Google Analytics.
-    # The Google hosts are the ones Google lists for Google Analytics without advertising features
-    # (developers.google.com/tag-platform/security/guides/csp).
-    # scripts/serve.js sends the same policy, so the browser tests run under it.
     Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://www.googletagmanager.com; connect-src 'self' https://account-fk.niu.com https://app-api-fk.niu.com https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com; img-src 'self' https://www.googletagmanager.com https://*.google-analytics.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
-    # The host names its PHP version in this header.
     Header unset X-Powered-By
     Header always unset X-Powered-By
 </IfModule>

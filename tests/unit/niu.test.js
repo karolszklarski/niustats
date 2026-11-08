@@ -8,10 +8,6 @@ const scooters = [{ sn_id: 'SN1', scooter_name: 'Blue', sku_name: 'NQi GTS' }];
 const track = (trackId, date, distance, battery) => ({ trackId, date, distance, power_consumption: battery });
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status });
 
-/**
- * A fetch that answers like Niu: `pages` holds the trip list pages of each scooter, and `answer` can
- * replace the answer to any request. Records the requests in `requests`.
- */
 function fakeNiu({ pages = {}, answer } = {}) {
   const requests = [];
   const fetch = async (url, init = {}) => {
@@ -27,7 +23,6 @@ function fakeNiu({ pages = {}, answer } = {}) {
   return { fetch, requests };
 }
 
-/** Downloads from the fake Niu without real pauses. `seen` collects the log and the pauses, even on failure. */
 async function download(niu, { login = 'rider@example.com', seen = { log: '', waits: [] } } = {}) {
   const data = await downloadData(login, 'hash', {
     fetch: niu.fetch,

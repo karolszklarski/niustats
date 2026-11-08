@@ -4,7 +4,6 @@ const port = 4326;
 
 export default defineConfig({
   testDir: 'tests/e2e',
-  // One snapshot per test file, shared by all platforms: the values are plain numbers.
   snapshotPathTemplate: '{testDir}/__snapshots__/{testFilePath}/{arg}{ext}',
   forbidOnly: Boolean(process.env.CI),
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',

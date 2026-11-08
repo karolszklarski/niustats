@@ -1,6 +1,4 @@
-/* The look of the site: narrow figures and dense panels, like an instrument panel. Light or dark follows the system. */
 
-/* Polish and similar letters are in a separate file, loaded only by a page that shows them. */
 @font-face {
   font-family: 'Saira';
   font-style: normal;
@@ -39,7 +37,6 @@
   --accent-hover: #0a6a5f;
   --on-accent: #ffffff;
   --danger: #b5352a;
-  /* The charts read these and --panel too, in js/index.js. */
   --band-1: #0e8c7d;
   --band-2: #c98a06;
   --band-3: #d4483a;
@@ -82,7 +79,6 @@
   }
 }
 
-/* The cookie banner (vanilla-cookieconsent) is styled through these variables. */
 :root {
   --cc-font-family: var(--font);
   --cc-modal-border-radius: 6px;
@@ -151,7 +147,6 @@ code { font-family: var(--mono); font-size: 0.9em; }
   white-space: nowrap;
 }
 
-/* The rail: an ordinary header on a phone, a fixed column on a wide screen. */
 .rail { padding: 16px 16px 8px; }
 .brand-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .brand { display: block; min-width: 0; font-size: inherit; font-weight: inherit; text-decoration: none; }
@@ -219,7 +214,6 @@ main { min-width: 0; padding: 16px 16px 24px; }
 .page-title { font-size: clamp(32px, 8vw, 44px); font-weight: 600; font-stretch: 86%; line-height: 1.1; }
 .page-lead { margin-top: 8px; color: var(--text-2); }
 
-/* A scooter */
 .scooter + .scooter { margin-top: 40px; }
 .scooter-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin-bottom: 12px; }
 .scooter-name { font-size: 20px; font-weight: 600; font-stretch: 90%; overflow-wrap: anywhere; }
@@ -227,7 +221,6 @@ main { min-width: 0; padding: 16px 16px 24px; }
 .scooter-empty { padding: 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text-2); }
 .scooter-note { margin-top: 12px; font-size: 14px; line-height: 1.4; color: var(--text-2); }
 
-/* The figures at the top */
 .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .stats.stats-single { grid-template-columns: minmax(0, 1fr); }
 .stat { min-width: 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
@@ -247,7 +240,6 @@ main { min-width: 0; padding: 16px 16px 24px; }
 .stat-hero .stat-value .unit { font-size: 28px; }
 .stat-note { margin-top: 6px; font-size: 13px; line-height: 1.35; color: var(--text-3); }
 
-/* With little riding: no figure (wait), or a figure marked as approximate (rough). */
 .stat-wait, .stat-caution, .approx { display: none; }
 .stat-wait { margin-top: 8px; max-width: 34em; font-size: 16px; line-height: 1.4; }
 .stat-caution { margin-top: 4px; font-size: 14px; font-weight: 500; line-height: 1.35; color: var(--text); }
@@ -270,7 +262,6 @@ main { min-width: 0; padding: 16px 16px 24px; }
 .key.g2 { background: var(--band-2); }
 .key.g3 { background: var(--band-3); }
 
-/* Charts */
 .chart { margin-top: 12px; padding: 10px 12px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
 .chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0 16px; margin-bottom: 6px; }
 .chart-title { font-size: 17px; font-weight: 600; font-stretch: 90%; }
@@ -306,7 +297,6 @@ main { min-width: 0; padding: 16px 16px 24px; }
 .strip-title { margin-bottom: 4px; font-size: 13px; color: var(--text-2); }
 .strip-plot { position: relative; height: 120px; }
 
-/* The table of months */
 .twin { margin-top: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
 .twin summary { display: flex; align-items: center; min-height: 44px; padding: 0 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
 .twin summary::before { content: '+'; width: 16px; color: var(--text-3); }
@@ -315,7 +305,6 @@ main { min-width: 0; padding: 16px 16px 24px; }
 .twin table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
 .twin th, .twin td { padding: 6px 12px; border-bottom: 1px solid var(--line); text-align: right; }
 .twin th {
-  /* A long table scrolls inside its frame, and keeps its column names in sight. */
   position: sticky;
   top: 0;
   background: var(--panel);
@@ -328,7 +317,6 @@ main { min-width: 0; padding: 16px 16px 24px; }
 .twin th:first-child, .twin td:first-child { text-align: left; white-space: nowrap; }
 .twin-note { padding: 8px 12px; font-size: 13px; color: var(--text-3); }
 
-/* Signing in */
 .pull-grid { display: grid; gap: 12px; margin-top: 16px; }
 .pull-notes { font-size: 15px; }
 .pull-notes ol { margin-top: 10px; padding-left: 20px; }
@@ -351,7 +339,6 @@ main { min-width: 0; padding: 16px 16px 24px; }
 .field textarea { font-size: 14px; line-height: 1.4; resize: vertical; }
 #logsDiv { margin: 14px 0 0; }
 
-/* Long text */
 .prose h2 { margin-top: 28px; font-size: 21px; font-weight: 600; font-stretch: 90%; line-height: 1.2; }
 .prose p, .prose ul, .prose .panel { margin-top: 10px; }
 .prose ul { padding-left: 20px; }
@@ -360,7 +347,6 @@ main { min-width: 0; padding: 16px 16px 24px; }
 .prose .page-lead { margin-top: 12px; }
 .updated { margin-top: 28px; font-size: 14px; color: var(--text-3); }
 
-/* The cookies table: on a phone each row becomes a block, with the column names beside each value. */
 .cookies { padding: 0; }
 .cookies table { width: 100%; border-collapse: collapse; font-size: 15px; }
 .cookies th, .cookies td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
@@ -388,10 +374,8 @@ main { min-width: 0; padding: 16px 16px 24px; }
   }
 }
 
-/* Plain CSV: nothing else on the page, so that selecting everything selects only the data. */
 #csv { min-width: 0; margin: 0; padding: 16px; overflow-x: auto; font: 13px/1.5 var(--mono); }
 
-/* Footer */
 .links { display: flex; flex-wrap: wrap; gap: 0 16px; padding: 8px 16px 16px; font-size: 13px; color: var(--text-2); }
 .links a, .links button {
   display: inline-flex;
@@ -408,7 +392,6 @@ main { min-width: 0; padding: 16px 16px 24px; }
 }
 
 @media (min-width: 640px) {
-  /* The main figure on the left and the other two stacked on the right, with no half-empty tiles. */
   .stats { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
   .stat-hero { grid-column: auto; grid-row: span 2; }
   .stat:not(.stat-hero) { display: flex; flex-direction: column; justify-content: center; }
@@ -416,7 +399,6 @@ main { min-width: 0; padding: 16px 16px 24px; }
   .rail, main, .links { padding-inline: 24px; }
 }
 
-/* A wide screen: the rail stays in place on the left, with the footer at its bottom. */
 @media (min-width: 1100px) {
   body { display: grid; grid-template-columns: var(--rail) minmax(0, 1fr); align-items: start; }
   .rail {

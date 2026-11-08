@@ -1,6 +1,3 @@
-// Tests public/.htaccess on Apache with PHP in Docker, the setup of the web host. There is no HTTPS here, so
-// the site root runs without the HTTPS rule, and unchanged/ holds a copy of the site with the real .htaccess
-// to test that rule.
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
@@ -15,7 +12,6 @@ const PORT = 8093;
 const publicPath = fileURLToPath(new URL('../../public', import.meta.url));
 const docker = (...args) => execFileSync('docker', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 
-/** Sends a request to Apache. The Host header says which address the visitor asked for. */
 function send(path, { host = 'niustats.com', method = 'GET', headers = {} } = {}) {
   return new Promise((resolve, reject) => {
     const options = { host: '127.0.0.1', port: PORT, path, method, headers: { host, ...headers } };
@@ -36,7 +32,6 @@ before(async () => {
   try {
     docker('rm', '-f', CONTAINER);
   } catch {
-    // No container left over from an earlier run.
   }
   docker(
     'run', '--rm', '--detach', '--name', CONTAINER,
@@ -59,7 +54,6 @@ before(async () => {
     try {
       if ((await send('/robots.txt')).status === 200) break;
     } catch {
-      // Apache is not up yet.
     }
     if (attempt === 100) throw new Error(`Apache did not start:\n${docker('logs', CONTAINER)}`);
     await sleep(200);

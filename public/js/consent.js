@@ -1,6 +1,3 @@
-// Consent banner and Google Analytics, on every page. Google Analytics starts only after the visitor
-// accepts it, so before that a page contacts no server other than this site. privacy.html lists the
-// cookies this sets: change them together.
 import * as CookieConsent from '../vendor/cookieconsent.esm.js';
 
 const GOOGLE_ANALYTICS_ID = 'G-WDN0Q9FRX8';
@@ -13,11 +10,9 @@ function startAnalytics() {
   if (analyticsStarted) return;
   analyticsStarted = true;
   window.dataLayer = window.dataLayer || [];
-  // gtag.js reads the arguments object itself, so this cannot be an arrow function with rest parameters.
   function gtag() {
     window.dataLayer.push(arguments);
   }
-  // The site shows no ads: without this, the tag can also store advertising identifiers.
   gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' });
   gtag('js', new Date());
   gtag('config', GOOGLE_ANALYTICS_ID);
@@ -28,11 +23,6 @@ function startAnalytics() {
   document.head.append(script);
 }
 
-/**
- * Runs when the visitor withdraws consent, before the page reloads. On leaving a page Google Analytics
- * sends a last hit, which can write its cookies again after the library has removed them, so it is
- * switched off first. Its cookies are on the parent domain, and autoClear leaves localStorage alone.
- */
 function stopAnalytics() {
   window[`ga-disable-${GOOGLE_ANALYTICS_ID}`] = true;
   for (const name of document.cookie.split('; ').map((cookie) => cookie.split('=')[0])) {

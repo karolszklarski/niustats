@@ -1,5 +1,3 @@
-// Download page: signs in to Niu, downloads the scooters with their trips and stores them in the browser.
-// md5() comes from vendor/md5.min.js, loaded as a classic script before this module.
 import { downloadData, NiuError } from './niu.js';
 import { saveData } from './storage.js';
 
@@ -22,7 +20,6 @@ document.getElementById('gatherButton').addEventListener('click', async () => {
     log(`Error: ${error.message}\n`);
     scrollToBottom();
     working = false;
-    // A NiuError is expected and fully reported in the log. Anything else is a bug in this page.
     if (!(error instanceof NiuError)) throw error;
   }
 });
