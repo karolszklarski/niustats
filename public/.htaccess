@@ -1,5 +1,10 @@
 Options -MultiViews -Indexes
 
+# OVH compresses HTML, CSS and JS itself, but not SVG
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
 RedirectMatch 404 (^|/)\.git(/|$)
 
 <IfModule mod_headers.c>
